@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zentropic Technologies — Business Intelligence. Simplified.</title>
+  <meta name="description" content="Zentropic Technologies builds enterprise-grade SaaS management systems for retail, education, HR and more. Powering Pakistani businesses with cloud-first software." />
+  <meta name="keywords" content="POS system Pakistan, School ERP, HR software, Retail management, MartPOS, SaaS Pakistan" />
+  <meta property="og:title" content="Zentropic Technologies" />
+  <meta property="og:description" content="Business Intelligence. Simplified." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-base:    #060A10;
+      --bg-surface: #0C1422;
+      --bg-card:    #111827;
+      --bg-card-hover: #162032;
+      --border:     rgba(255,255,255,0.07);
+      --border-glow:rgba(0,212,255,0.25);
+      --cyan:       #00D4FF;
+      --cyan-dim:   #0099CC;
+      --blue:       #3B82F6;
+      --purple:     #8B5CF6;
+      --green:      #10B981;
+      --orange:     #F59E0B;
+      --red:        #EF4444;
+      --text-1:     #F0F6FF;
+      --text-2:     #94A3B8;
+      --text-3:     #4B5A6E;
+      --gradient-primary: linear-gradient(135deg, #00D4FF 0%, #3B82F6 50%, #8B5CF6 100%);
+      --gradient-hero:    linear-gradient(135deg, #060A10 0%, #0C1422 50%, #111827 100%);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-base);
+      color: var(--text-1);
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; }
+
+    /* ─── Scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 3px; }
+
+    /* ─── Grid background ───────────────────────────────────────── */
+    .grid-bg {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .glow-orb {
+      position: fixed; border-radius: 50%; filter: blur(120px);
+      pointer-events: none; z-index: 0; opacity: 0.12;
+    }
+    .glow-orb-1 { width: 600px; height: 600px; background: var(--cyan); top: -200px; left: -200px; }
+    .glow-orb-2 { width: 500px; height: 500px; background: var(--blue); bottom: 0; right: -100px; }
+
+    /* ─── Navbar ────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 64px;
+      background: rgba(6,10,16,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 max(1.5rem, calc((100vw - 1200px)/2));
+    }
+    .nav-inner {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.625rem;
+    }
+    .nav-logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--gradient-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 1rem; color: white;
+      box-shadow: 0 0 20px rgba(0,212,255,0.3);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .nav-logo-text { display: flex; flex-direction: column; }
+    .nav-logo-name { font-weight: 800; font-size: 0.9375rem; letter-spacing: -0.02em; color: white; font-family: 'Space Grotesk', sans-serif; }
+    .nav-logo-sub  { font-size: 0.625rem; color: var(--cyan); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+    .nav-links { display: flex; align-items: center; gap: 0.125rem; }
+    .nav-link {
+      padding: 0.375rem 0.875rem; border-radius: 6px;
+      font-size: 0.875rem; font-weight: 500; color: var(--text-2);
+      transition: all 0.15s ease; cursor: pointer;
+    }
+    .nav-link:hover { color: white; background: rgba(255,255,255,0.06); }
+
+    .nav-cta {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .btn-nav-outline {
+      padding: 0.4375rem 1rem; border-radius: 8px;
+      border: 1px solid var(--border-glow); color: var(--cyan);
+      font-size: 0.875rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s ease; background: transparent;
+    }
+    .btn-nav-outline:hover { background: rgba(0,212,255,0.08); }
+    .btn-nav-primary {
+      padding: 0.4375rem 1.125rem; border-radius: 8px;
+      background: var(--gradient-primary); color: white;
+      font-size: 0.875rem; font-weight: 700; cursor: pointer;
+      border: none; transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(0,212,255,0.25);
+    }
+    .btn-nav-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(0,212,255,0.35); }
+
+    /* ─── Sections ──────────────────────────────────────────────── */
+    section { position: relative; z-index: 1; }
+    .container {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 max(1.5rem, calc((100vw - 1200px)/2));
+    }
+
+    /* ─── Hero ──────────────────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 7rem 1.5rem 5rem;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.375rem 1rem; border-radius: 999px;
+      background: rgba(0,212,255,0.08);
+      border: 1px solid rgba(0,212,255,0.2);
+      color: var(--cyan); font-size: 0.8125rem; font-weight: 600;
+      margin-bottom: 1.75rem; animation: fadeInDown 0.6s ease both;
+    }
+    .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.2)} }
+
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 800; letter-spacing: -0.035em;
+      line-height: 1.05; max-width: 900px; margin: 0 auto 1.25rem;
+      animation: fadeInUp 0.7s 0.1s ease both;
+    }
+    .hero-title .gradient-text {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.25rem); color: var(--text-2);
+      max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.7;
+      animation: fadeInUp 0.7s 0.2s ease both;
+    }
+    .hero-actions {
+      display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;
+      animation: fadeInUp 0.7s 0.3s ease both; margin-bottom: 4rem;
+    }
+    .btn-primary {
+      padding: 0.875rem 2rem; border-radius: 10px;
+      background: var(--gradient-primary); color: white;
+      font-size: 1rem; font-weight: 700; border: none; cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 30px rgba(0,212,255,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,212,255,0.45); }
+    .btn-secondary {
+      padding: 0.875rem 2rem; border-radius: 10px;
+      background: rgba(255,255,255,0.05); color: white;
+      font-size: 1rem; font-weight: 600;
+      border: 1px solid var(--border); cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.15); }
+
+    .hero-stats {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 3rem;
+      padding: 2rem 0; border-top: 1px solid var(--border);
+      animation: fadeInUp 0.7s 0.4s ease both;
+    }
+    .hero-stat-val {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.25rem; font-weight: 800; color: white;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-stat-label { font-size: 0.8125rem; color: var(--text-3); font-weight: 500; margin-top: 0.25rem; }
+
+    /* ─── Animations ────────────────────────────────────────────── */
+    @keyframes fadeInDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeInUp   { from{opacity:0;transform:translateY(24px)}  to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn     { from{opacity:0} to{opacity:1} }
+
+    /* ─── Products Section ──────────────────────────────────────── */
+    #products { padding: 6rem 0; }
+    .section-label {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--cyan); margin-bottom: 1rem;
+    }
+    .section-label::before { content:''; width: 24px; height: 2px; background: var(--cyan); border-radius: 1px; }
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;
+      letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 1rem;
+    }
+    .section-sub { color: var(--text-2); font-size: 1.0625rem; max-width: 560px; line-height: 1.7; }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.5rem; margin-top: 3.5rem;
+    }
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem; overflow: hidden;
+      transition: all 0.3s ease; cursor: pointer;
+      position: relative;
+    }
+    .product-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 1.25rem;
+      padding: 1px;
+      background: var(--gradient-primary); opacity: 0;
+      transition: opacity 0.3s ease;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    .product-card:hover::before { opacity: 1; }
+    .product-card:hover { transform: translateY(-4px); background: var(--bg-card-hover); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+
+    .card-header {
+      padding: 1.75rem 1.75rem 1.25rem;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+    }
+    .card-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; flex-shrink: 0;
+    }
+    .card-badge {
+      font-size: 0.6875rem; font-weight: 700; padding: 0.25rem 0.625rem;
+      border-radius: 999px; white-space: nowrap;
+    }
+    .badge-live  { background: rgba(16,185,129,0.15); color: #10B981; border: 1px solid rgba(16,185,129,0.25); }
+    .badge-soon  { background: rgba(245,158,11,0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
+    .badge-beta  { background: rgba(59,130,246,0.15); color: #3B82F6; border: 1px solid rgba(59,130,246,0.25); }
+
+    .card-body { padding: 0 1.75rem 1.75rem; }
+    .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 700; color: white; margin-bottom: 0.5rem; }
+    .card-desc  { color: var(--text-2); font-size: 0.9rem; line-height: 1.65; margin-bottom: 1.25rem; }
+    .card-features { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .card-feature {
+      display: flex; align-items: center; gap: 0.625rem;
+      font-size: 0.8125rem; color: var(--text-2);
+    }
+    .card-feature-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .card-link {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      font-size: 0.875rem; font-weight: 600; color: var(--cyan);
+      transition: gap 0.2s ease;
+    }
+    .card-link:hover { gap: 0.625rem; }
+    .card-divider { height: 1px; background: var(--border); margin: 0 1.75rem; }
+    .card-footer {
+      padding: 1rem 1.75rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-plan { font-size: 0.75rem; color: var(--text-3); }
+    .card-price { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700; color: white; }
+    .card-price span { font-size: 0.75rem; color: var(--text-3); font-weight: 400; }
+
+    /* ─── Features strip ────────────────────────────────────────── */
+    #why { padding: 6rem 0; }
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem; margin-top: 3.5rem;
+    }
+    .why-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.75rem;
+      transition: all 0.25s ease;
+    }
+    .why-card:hover { border-color: var(--border-glow); transform: translateY(-2px); }
+    .why-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; margin-bottom: 1rem;
+    }
+    .why-title { font-weight: 700; color: white; font-size: 1rem; margin-bottom: 0.5rem; }
+    .why-desc  { color: var(--text-2); font-size: 0.875rem; line-height: 1.65; }
+
+    /* ─── Pricing ───────────────────────────────────────────────── */
+    #pricing { padding: 6rem 0; }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem; margin-top: 3.5rem; align-items: start;
+    }
+    .pricing-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 1.25rem; padding: 2rem; transition: all 0.3s ease;
+      position: relative; overflow: hidden;
+    }
+    .pricing-card.featured {
+      border-color: var(--cyan);
+      background: linear-gradient(135deg, #0C1A2A, #0A1520);
+      box-shadow: 0 0 40px rgba(0,212,255,0.12), 0 20px 60px rgba(0,0,0,0.4);
+    }
+    .pricing-card.featured::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--gradient-primary);
+    }
+    .pricing-popular {
+      display: inline-block; font-size: 0.6875rem; font-weight: 700;
+      padding: 0.25rem 0.625rem; border-radius: 999px;
+      background: var(--gradient-primary); color: white;
+      margin-bottom: 1.25rem;
+    }
+    .pricing-plan   { font-family: 'Space Grotesk', sans-serif; font-size: 1.125rem; font-weight: 700; color: white; margin-bottom: 0.5rem; }
+    .pricing-desc   { font-size: 0.875rem; color: var(--text-2); margin-bottom: 1.5rem; }
+    .pricing-price  {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.5rem; font-weight: 800; color: white; margin-bottom: 0.25rem;
+    }
+    .pricing-price sub { font-size: 1rem; font-weight: 600; color: var(--text-2); bottom: 0.25rem; }
+    .pricing-per { font-size: 0.8125rem; color: var(--text-3); margin-bottom: 1.75rem; }
+    .pricing-features { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
+    .pricing-feature {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.875rem; color: var(--text-2);
+    }
+    .pricing-check { color: var(--green); font-size: 1rem; flex-shrink: 0; }
+    .btn-plan {
+      width: 100%; padding: 0.75rem; border-radius: 10px;
+      font-size: 0.9375rem; font-weight: 700; cursor: pointer;
+      transition: all 0.2s ease; border: none;
+    }
+    .btn-plan-outline { background: transparent; color: white; border: 1px solid var(--border); }
+    .btn-plan-outline:hover { background: rgba(255,255,255,0.06); }
+    .btn-plan-primary { background: var(--gradient-primary); color: white; box-shadow: 0 4px 20px rgba(0,212,255,0.25); }
+    .btn-plan-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(0,212,255,0.4); }
+
+    /* ─── Stack strip ───────────────────────────────────────────── */
+    #stack { padding: 4rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .stack-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2rem 3rem; }
+    .stack-label { font-size: 0.8125rem; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+    .stack-tag {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4375rem 1rem; border-radius: 8px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      font-size: 0.875rem; font-weight: 600; color: var(--text-2);
+      transition: all 0.2s ease;
+    }
+    .stack-tag:hover { color: white; border-color: var(--border-glow); }
+
+    /* ─── CTA ───────────────────────────────────────────────────── */
+    #cta {
+      padding: 8rem 0;
+    }
+    .cta-inner {
+      background: linear-gradient(135deg, #0C1422, #111827);
+      border: 1px solid rgba(0,212,255,0.15);
+      border-radius: 2rem; padding: 5rem 2rem;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-inner::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; height: 2px; background: var(--gradient-primary);
+    }
+    .cta-glow {
+      position: absolute; width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(0,212,255,0.08), transparent 70%);
+      top: 0; left: 50%; transform: translateX(-50%); pointer-events: none;
+    }
+    .cta-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800;
+      letter-spacing: -0.03em; margin-bottom: 1rem;
+    }
+    .cta-sub { color: var(--text-2); font-size: 1.125rem; max-width: 500px; margin: 0 auto 2.5rem; }
+    .cta-actions { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+
+    /* ─── Footer ────────────────────────────────────────────────── */
+    footer {
+      background: var(--bg-base); border-top: 1px solid var(--border);
+      padding: 4rem 0 2rem; position: relative; z-index: 1;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem; margin-bottom: 3rem;
+    }
+    .footer-brand-desc { color: var(--text-3); font-size: 0.875rem; line-height: 1.7; margin-top: 0.75rem; max-width: 260px; }
+    .footer-social { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+    .footer-social-link {
+      width: 36px; height: 36px; border-radius: 8px;
+      border: 1px solid var(--border); display: flex;
+      align-items: center; justify-content: center;
+      color: var(--text-3); font-size: 1rem; transition: all 0.2s ease;
+    }
+    .footer-social-link:hover { color: var(--cyan); border-color: var(--border-glow); }
+    .footer-col-title { font-weight: 700; font-size: 0.875rem; color: white; margin-bottom: 1rem; }
+    .footer-links { display: flex; flex-direction: column; gap: 0.625rem; }
+    .footer-link { color: var(--text-3); font-size: 0.875rem; transition: color 0.15s ease; }
+    .footer-link:hover { color: var(--cyan); }
+    .footer-bottom {
+      padding-top: 2rem; border-top: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 1rem;
+      align-items: center; justify-content: space-between;
+    }
+    .footer-copy  { font-size: 0.8125rem; color: var(--text-3); }
+    .footer-made  { font-size: 0.8125rem; color: var(--text-3); }
+    .footer-made a { color: var(--cyan); }
+
+    /* ─── Contact form ──────────────────────────────────────────── */
+    #contact { padding: 6rem 0; }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+    .contact-form-wrapper {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 1.25rem; padding: 2.5rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .form-label { font-size: 0.875rem; font-weight: 600; color: var(--text-2); }
+    .form-input {
+      padding: 0.75rem 1rem; border-radius: 8px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      color: white; font-size: 0.9375rem; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color 0.2s ease;
+    }
+    .form-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,212,255,0.1); }
+    .form-input::placeholder { color: var(--text-3); }
+    textarea.form-input { resize: vertical; min-height: 120px; }
+
+    /* ─── Mobile ────────────────────────────────────────────────── */
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 0.5rem; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: var(--text-2); border-radius: 1px; transition: all 0.3s; }
+
+    @media (max-width: 900px) {
+      .nav-links, .nav-cta .btn-nav-outline { display: none; }
+      .hamburger { display: flex; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .products-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .footer-grid { grid-template-columns: 1fr; }
+      .hero-stats { gap: 2rem; }
+      nav { padding: 0 1.25rem; }
+    }
+
+    /* ─── Mobile nav menu ───────────────────────────────────────── */
+    #mobile-menu {
+      display: none; position: fixed; top: 64px; left: 0; right: 0;
+      background: rgba(6,10,16,0.97); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border); z-index: 99;
+      flex-direction: column; padding: 1rem;
+    }
+    #mobile-menu.open { display: flex; }
+    .mobile-nav-link {
+      padding: 0.75rem 1rem; border-radius: 8px;
+      color: var(--text-2); font-size: 0.9375rem; font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .mobile-nav-link:hover { color: white; background: rgba(255,255,255,0.05); }
+
+    /* ─── Divider ───────────────────────────────────────────────── */
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(30px); transition: all 0.65s cubic-bezier(0.16,1,0.3,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="grid-bg"></div>
+<div class="glow-orb glow-orb-1"></div>
+<div class="glow-orb glow-orb-2"></div>
+
+<!-- ─── NAVBAR ─────────────────────────────────────────────────── -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#hero" class="nav-logo">
+      <div class="nav-logo-icon">ZT</div>
+      <div class="nav-logo-text">
+        <div class="nav-logo-name">ZENTROPIC</div>
+        <div class="nav-logo-sub">Technologies</div>
+      </div>
+    </a>
+
+    <div class="nav-links">
+      <a href="#products" class="nav-link">Products</a>
+      <a href="#why"      class="nav-link">Why Us</a>
+      <a href="#pricing"  class="nav-link">Pricing</a>
+      <a href="#contact"  class="nav-link">Contact</a>
+    </div>
+
+    <div class="nav-cta">
+      <a href="#contact" class="btn-nav-outline">Get Demo</a>
+      <a href="https://mubeenqazi6.github.io/Mart_POS_System/" target="_blank" class="btn-nav-primary">Launch MartPOS →</a>
+      <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div id="mobile-menu">
+  <a href="#products" class="mobile-nav-link" onclick="closeMenu()">Products</a>
+  <a href="#why"      class="mobile-nav-link" onclick="closeMenu()">Why Us</a>
+  <a href="#pricing"  class="mobile-nav-link" onclick="closeMenu()">Pricing</a>
+  <a href="#contact"  class="mobile-nav-link" onclick="closeMenu()">Contact</a>
+</div>
+
+<!-- ─── HERO ───────────────────────────────────────────────────── -->
+<section id="hero">
+  <div class="hero-badge">
+    <div class="hero-badge-dot"></div>
+    Pakistan's #1 SaaS ERP Suite
+  </div>
+
+  <h1 class="hero-title">
+    Business Intelligence.<br>
+    <span class="gradient-text">Simplified.</span>
+  </h1>
+
+  <p class="hero-sub">
+    Enterprise-grade management systems for retail, education, and HR —
+    built for Pakistan's modern businesses. Cloud-first, offline-ready, always synced.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#products" class="btn-primary">Explore Products ↓</a>
+    <a href="#contact"  class="btn-secondary">Book Free Demo →</a>
+  </div>
+
+  <div class="hero-stats">
+    <div style="text-align:center">
+      <div class="hero-stat-val">500+</div>
+      <div class="hero-stat-label">Active Business Users</div>
+    </div>
+    <div style="text-align:center">
+      <div class="hero-stat-val">5+</div>
+      <div class="hero-stat-label">Management Systems</div>
+    </div>
+    <div style="text-align:center">
+      <div class="hero-stat-val">99.9%</div>
+      <div class="hero-stat-label">Cloud Uptime SLA</div>
+    </div>
+    <div style="text-align:center">
+      <div class="hero-stat-val">3-Day</div>
+      <div class="hero-stat-label">Free Trial on All Plans</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRODUCTS ───────────────────────────────────────────────── -->
+<section id="products">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Our Products</div>
+      <h2 class="section-title">One Suite. Every Business.</h2>
+      <p class="section-sub">
+        A complete ecosystem of management systems — each powerful standalone,
+        even better together.
+      </p>
+    </div>
+
+    <div class="products-grid">
+
+      <!-- MartPOS -->
+      <div class="product-card reveal">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(240,147,42,0.15);">🛒</div>
+          <span class="card-badge badge-live">● Live Now</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">MartPOS — Retail & Mart</div>
+          <div class="card-desc">
+            A complete Point of Sale and Inventory Management system for retail stores,
+            marts, and supermarkets. Desktop + Web + Cloud sync.
+          </div>
+          <div class="card-features">
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#F59E0B"></div>
+              POS Billing, Barcode Scanner & Thermal Receipt Print
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#F59E0B"></div>
+              Multi-Counter Cloud Sync (Desktop + Web)
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#F59E0B"></div>
+              Khata (Customer Credit), Supplier & Purchase Module
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#F59E0B"></div>
+              Inventory, Expenses, Reports & Staff Roles
+            </div>
+          </div>
+          <a href="https://mubeenqazi6.github.io/Mart_POS_System/" target="_blank" class="card-link" style="color:#F59E0B">
+            Open MartPOS Web App →
+          </a>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <div>
+            <div class="card-plan">Starting at</div>
+            <div class="card-price">PKR 999 <span>/ month</span></div>
+          </div>
+          <a href="https://mubeenqazi6.github.io/Mart_POS_System/" target="_blank" class="btn-primary" style="padding:0.5rem 1.25rem;font-size:0.875rem;">
+            Try Free
+          </a>
+        </div>
+      </div>
+
+      <!-- School ERP -->
+      <div class="product-card reveal">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(59,130,246,0.15);">🎓</div>
+          <span class="card-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">SchoolIQ — Education ERP</div>
+          <div class="card-desc">
+            A fully integrated School Management System for admissions, fee collection,
+            attendance, results, and parent communication.
+          </div>
+          <div class="card-features">
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#3B82F6"></div>
+              Student Admission & Profile Management
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#3B82F6"></div>
+              Fee Collection, Challans & Scholarship Tracking
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#3B82F6"></div>
+              Attendance, Timetable & Exam Results
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#3B82F6"></div>
+              Parent Portal & SMS Notifications
+            </div>
+          </div>
+          <a href="#contact" class="card-link" style="color:#3B82F6">
+            Join Waitlist →
+          </a>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <div>
+            <div class="card-plan">Starting at</div>
+            <div class="card-price">PKR 2,499 <span>/ month</span></div>
+          </div>
+          <a href="#contact" class="btn-secondary" style="padding:0.5rem 1.25rem;font-size:0.875rem;border-radius:8px;cursor:pointer;">
+            Notify Me
+          </a>
+        </div>
+      </div>
+
+      <!-- HR System -->
+      <div class="product-card reveal">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(139,92,246,0.15);">👥</div>
+          <span class="card-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">HREdge — HR & Payroll</div>
+          <div class="card-desc">
+            End-to-end Human Resource Management for SMEs. Salary automation,
+            leave tracking, performance reviews, and compliance.
+          </div>
+          <div class="card-features">
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#8B5CF6"></div>
+              Employee Profiles, Contracts & Documents
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#8B5CF6"></div>
+              Automated Payroll with EOBI & Tax Calculations
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#8B5CF6"></div>
+              Leave Management, Attendance & Shifts
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#8B5CF6"></div>
+              Performance Reviews & Appraisals
+            </div>
+          </div>
+          <a href="#contact" class="card-link" style="color:#8B5CF6">
+            Join Waitlist →
+          </a>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <div>
+            <div class="card-plan">Starting at</div>
+            <div class="card-price">PKR 1,999 <span>/ month</span></div>
+          </div>
+          <a href="#contact" class="btn-secondary" style="padding:0.5rem 1.25rem;font-size:0.875rem;border-radius:8px;cursor:pointer;">
+            Notify Me
+          </a>
+        </div>
+      </div>
+
+      <!-- Inventory WMS -->
+      <div class="product-card reveal">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(16,185,129,0.15);">📦</div>
+          <span class="card-badge badge-beta">Beta</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">StockMaster — Warehouse WMS</div>
+          <div class="card-desc">
+            A dedicated Warehouse Management System for distributors and
+            wholesalers managing large-scale stock movements.
+          </div>
+          <div class="card-features">
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#10B981"></div>
+              Multi-Warehouse Stock Tracking
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#10B981"></div>
+              Batch/Lot Management with Expiry Tracking
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#10B981"></div>
+              Purchase Orders, GRN & Stock Audit
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#10B981"></div>
+              Barcode + QR Code Generation & Printing
+            </div>
+          </div>
+          <a href="#contact" class="card-link" style="color:#10B981">
+            Request Beta Access →
+          </a>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <div>
+            <div class="card-plan">Starting at</div>
+            <div class="card-price">PKR 3,499 <span>/ month</span></div>
+          </div>
+          <a href="#contact" class="btn-secondary" style="padding:0.5rem 1.25rem;font-size:0.875rem;border-radius:8px;cursor:pointer;">
+            Get Beta
+          </a>
+        </div>
+      </div>
+
+      <!-- Accounting -->
+      <div class="product-card reveal">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(239,68,68,0.15);">📊</div>
+          <span class="card-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">LedgerX — Accounting & Finance</div>
+          <div class="card-desc">
+            A simple yet powerful accounting system for SMEs — Chart of Accounts,
+            vouchers, balance sheet, P&L, and tax compliance.
+          </div>
+          <div class="card-features">
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#EF4444"></div>
+              Double-Entry Bookkeeping & Vouchers
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#EF4444"></div>
+              Balance Sheet, P&L & Cash Flow Reports
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#EF4444"></div>
+              Tax Invoicing & FBR Compliance
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#EF4444"></div>
+              Bank Reconciliation & Cheque Management
+            </div>
+          </div>
+          <a href="#contact" class="card-link" style="color:#EF4444">
+            Join Waitlist →
+          </a>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <div>
+            <div class="card-plan">Starting at</div>
+            <div class="card-price">PKR 1,499 <span>/ month</span></div>
+          </div>
+          <a href="#contact" class="btn-secondary" style="padding:0.5rem 1.25rem;font-size:0.875rem;border-radius:8px;cursor:pointer;">
+            Notify Me
+          </a>
+        </div>
+      </div>
+
+      <!-- Restaurant POS -->
+      <div class="product-card reveal">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(245,158,11,0.15);">🍽️</div>
+          <span class="card-badge badge-soon">Coming Soon</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">DineOS — Restaurant POS</div>
+          <div class="card-desc">
+            A restaurant-grade POS system with table management, kitchen display system,
+            online ordering, and daily closing.
+          </div>
+          <div class="card-features">
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#F59E0B"></div>
+              Table Map & Order Management
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#F59E0B"></div>
+              Kitchen Display System (KDS)
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#F59E0B"></div>
+              Menu with Combos, Variants & Modifiers
+            </div>
+            <div class="card-feature">
+              <div class="card-feature-dot" style="background:#F59E0B"></div>
+              Online Orders & Delivery Tracking
+            </div>
+          </div>
+          <a href="#contact" class="card-link" style="color:#F59E0B">
+            Join Waitlist →
+          </a>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer">
+          <div>
+            <div class="card-plan">Starting at</div>
+            <div class="card-price">PKR 1,999 <span>/ month</span></div>
+          </div>
+          <a href="#contact" class="btn-secondary" style="padding:0.5rem 1.25rem;font-size:0.875rem;border-radius:8px;cursor:pointer;">
+            Notify Me
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ─── TECH STACK ─────────────────────────────────────────────── -->
+<section id="stack">
+  <div class="container">
+    <div class="stack-inner">
+      <div class="stack-label">Built with</div>
+      <div class="stack-tag">⚡ React 19</div>
+      <div class="stack-tag">🔷 TypeScript</div>
+      <div class="stack-tag">🗄️ Supabase</div>
+      <div class="stack-tag">🖥️ Electron</div>
+      <div class="stack-tag">⚡ Vite</div>
+      <div class="stack-tag">📊 SQLite</div>
+      <div class="stack-tag">☁️ Vercel</div>
+      <div class="stack-tag">🐙 GitHub CI/CD</div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ─── WHY US ────────────────────────────────────────────────── -->
+<section id="why">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Why Zentropic</div>
+      <h2 class="section-title">Built for Pakistan.<br>Ready for the World.</h2>
+      <p class="section-sub">We understand local business needs — Urdu receipts, PKR precision, offline-first operation, and 3G network tolerant design.</p>
+    </div>
+
+    <div class="why-grid">
+      <div class="why-card reveal">
+        <div class="why-icon" style="background:rgba(0,212,255,0.1);">📶</div>
+        <div class="why-title">Offline-First Architecture</div>
+        <div class="why-desc">Works without internet. Data syncs automatically when connectivity returns. Never lose a sale.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon" style="background:rgba(59,130,246,0.1);">☁️</div>
+        <div class="why-title">Real-Time Cloud Sync</div>
+        <div class="why-desc">Multiple POS counters stay perfectly in sync via Supabase real-time. See live sales from any device.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon" style="background:rgba(16,185,129,0.1);">🔐</div>
+        <div class="why-title">Enterprise Security</div>
+        <div class="why-desc">Row-level security, encrypted sessions, role-based permissions, and full audit trails on every action.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon" style="background:rgba(245,158,11,0.1);">⚡</div>
+        <div class="why-title">Blazing Fast POS</div>
+        <div class="why-desc">Sub-50ms barcode lookups. Cart updates in real-time. Optimized for high-volume retail environments.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon" style="background:rgba(139,92,246,0.1);">🖥️</div>
+        <div class="why-title">Desktop + Web App</div>
+        <div class="why-desc">Windows desktop app for main counter. Web app for management & multi-location access on any browser.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon" style="background:rgba(239,68,68,0.1);">🧾</div>
+        <div class="why-title">PKR-Precise Accounting</div>
+        <div class="why-desc">All calculations use integer minor units — zero floating-point errors. Financial data you can trust.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon" style="background:rgba(0,212,255,0.1);">🔄</div>
+        <div class="why-title">Zero-Downtime Updates</div>
+        <div class="why-desc">Updates deploy silently in background. New features appear automatically — no manual installs.</div>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon" style="background:rgba(16,185,129,0.1);">🎓</div>
+        <div class="why-title">Free Onboarding & Training</div>
+        <div class="why-desc">Every plan includes a 30-minute onboarding session and full video tutorial library in Urdu/English.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRICING ────────────────────────────────────────────────── -->
+<section id="pricing">
+  <div class="container">
+    <div class="reveal" style="text-align:center">
+      <div class="section-label" style="justify-content:center">Pricing</div>
+      <h2 class="section-title">Simple, Transparent Pricing</h2>
+      <p class="section-sub" style="margin:0 auto">All plans include 3-day free trial. No credit card required.</p>
+    </div>
+
+    <div class="pricing-grid reveal">
+
+      <div class="pricing-card">
+        <div class="pricing-plan">Starter</div>
+        <div class="pricing-desc">For small shops & single-counter marts</div>
+        <div class="pricing-price"><sub>PKR </sub>999</div>
+        <div class="pricing-per">per month · 1 counter · 1 user</div>
+        <div class="pricing-features">
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Full POS & Billing</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Barcode & Label Printing</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Basic Inventory</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> 3 Staff Accounts</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> 30-Day Reports</div>
+          <div class="pricing-feature" style="opacity:0.4"><span>✗</span> Cloud Sync</div>
+          <div class="pricing-feature" style="opacity:0.4"><span>✗</span> Multi-Counter</div>
+        </div>
+        <button class="btn-plan btn-plan-outline" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">
+          Start Free Trial
+        </button>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pricing-popular">⭐ Most Popular</div>
+        <div class="pricing-plan">Pro Cloud</div>
+        <div class="pricing-desc">For growing retail businesses & marts</div>
+        <div class="pricing-price"><sub>PKR </sub>2,999</div>
+        <div class="pricing-per">per month · up to 3 counters · 10 users</div>
+        <div class="pricing-features">
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Everything in Starter</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Real-Time Cloud Sync</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> 3 POS Counters</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Khata & Supplier Ledger</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Full Reports & Analytics</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Auto Cloud Backup</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Priority Support</div>
+        </div>
+        <button class="btn-plan btn-plan-primary" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">
+          Start Free Trial
+        </button>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-plan">Enterprise</div>
+        <div class="pricing-desc">For chains, franchises & large operations</div>
+        <div class="pricing-price" style="font-size:1.75rem">Custom</div>
+        <div class="pricing-per">contact us for quote</div>
+        <div class="pricing-features">
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Unlimited Counters</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Unlimited Users</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> All Products Suite</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Custom Integrations</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> Dedicated Account Manager</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> On-site Training</div>
+          <div class="pricing-feature"><span class="pricing-check">✓</span> SLA 99.9% Uptime</div>
+        </div>
+        <button class="btn-plan btn-plan-outline" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">
+          Contact Sales
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── CONTACT ────────────────────────────────────────────────── -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-grid">
+      <div class="reveal">
+        <div class="section-label">Contact Us</div>
+        <h2 class="section-title" style="font-size:clamp(1.75rem,3vw,2.5rem)">Let's Build Something Great Together</h2>
+        <p style="color:var(--text-2);margin:1rem 0 2rem;line-height:1.7">
+          Whether you want a demo, have a question, or need a custom solution — our team is here. We typically respond within 2 hours.
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:1.25rem">
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,212,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0">📧</div>
+            <div>
+              <div style="font-size:0.75rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Email</div>
+              <div style="color:var(--cyan);font-weight:600">info@zenthropictechnologies.com</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,212,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0">📱</div>
+            <div>
+              <div style="font-size:0.75rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">WhatsApp / Phone</div>
+              <div style="color:white;font-weight:600">+92 300 0000000</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(0,212,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0">📍</div>
+            <div>
+              <div style="font-size:0.75rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Office</div>
+              <div style="color:white;font-weight:600">Lahore, Pakistan</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-form-wrapper reveal">
+        <h3 style="font-size:1.25rem;font-weight:700;margin-bottom:1.5rem">Send us a Message</h3>
+        <form id="contact-form" onsubmit="handleFormSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" class="form-input" placeholder="Your name" required id="f-name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Business / Mart Name *</label>
+            <input type="text" class="form-input" placeholder="e.g. Metro Hyper Mart" required id="f-business" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email or WhatsApp *</label>
+            <input type="text" class="form-input" placeholder="email@example.com or 0300-0000000" required id="f-contact" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Product Interested In</label>
+            <select class="form-input" id="f-product" style="cursor:pointer">
+              <option value="">— Select a product —</option>
+              <option>MartPOS — Retail POS</option>
+              <option>SchoolIQ — School ERP</option>
+              <option>HREdge — HR & Payroll</option>
+              <option>StockMaster — Warehouse WMS</option>
+              <option>LedgerX — Accounting</option>
+              <option>DineOS — Restaurant POS</option>
+              <option>Full Suite (All Products)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea class="form-input" placeholder="Tell us about your business needs..." id="f-message"></textarea>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%;margin-top:0.5rem" id="submit-btn">
+            Send Message →
+          </button>
+          <div id="form-success" style="display:none;margin-top:1rem;padding:0.75rem;border-radius:8px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10B981;font-size:0.875rem;text-align:center">
+            ✅ Message sent! We'll get back to you within 2 hours.
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CTA ───────────────────────────────────────────────────── -->
+<section id="cta">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <div class="cta-glow"></div>
+      <h2 class="cta-title">
+        Ready to Transform<br>
+        <span style="background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Your Business?</span>
+      </h2>
+      <p class="cta-sub">
+        Join 500+ Pakistani businesses already running on Zentropic Technologies.
+        Start your 3-day free trial today — no credit card needed.
+      </p>
+      <div class="cta-actions">
+        <a href="https://mubeenqazi6.github.io/Mart_POS_System/" target="_blank" class="btn-primary">
+          🚀 Launch MartPOS Free
+        </a>
+        <a href="#contact" class="btn-secondary">Book a Demo Call</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a href="#hero" class="nav-logo" style="display:inline-flex;margin-bottom:0.75rem">
+          <div class="nav-logo-icon">ZT</div>
+          <div class="nav-logo-text">
+            <div class="nav-logo-name">ZENTROPIC</div>
+            <div class="nav-logo-sub">Technologies</div>
+          </div>
+        </a>
+        <p class="footer-brand-desc">
+          Building enterprise-grade management systems for Pakistan's growing businesses. Cloud-first, offline-ready, always synced.
+        </p>
+        <div class="footer-social">
+          <a href="#" class="footer-social-link" title="LinkedIn">in</a>
+          <a href="#" class="footer-social-link" title="GitHub">⌥</a>
+          <a href="#" class="footer-social-link" title="Twitter">𝕏</a>
+          <a href="https://wa.me/923000000000" class="footer-social-link" title="WhatsApp">📱</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Products</div>
+        <div class="footer-links">
+          <a href="https://mubeenqazi6.github.io/Mart_POS_System/" target="_blank" class="footer-link">MartPOS — Retail POS</a>
+          <a href="#contact" class="footer-link">SchoolIQ — School ERP</a>
+          <a href="#contact" class="footer-link">HREdge — HR Payroll</a>
+          <a href="#contact" class="footer-link">StockMaster — WMS</a>
+          <a href="#contact" class="footer-link">LedgerX — Accounting</a>
+          <a href="#contact" class="footer-link">DineOS — Restaurant POS</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Company</div>
+        <div class="footer-links">
+          <a href="#why"     class="footer-link">About Us</a>
+          <a href="#pricing" class="footer-link">Pricing</a>
+          <a href="#contact" class="footer-link">Careers</a>
+          <a href="#contact" class="footer-link">Blog</a>
+          <a href="#contact" class="footer-link">Press Kit</a>
+        </div>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Support</div>
+        <div class="footer-links">
+          <a href="#contact" class="footer-link">Documentation</a>
+          <a href="#contact" class="footer-link">Video Tutorials</a>
+          <a href="#contact" class="footer-link">WhatsApp Support</a>
+          <a href="#contact" class="footer-link">Privacy Policy</a>
+          <a href="#contact" class="footer-link">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 Zentropic Technologies. All rights reserved.</div>
+      <div class="footer-made">
+        Made with ❤️ in Pakistan ·
+        <a href="https://zenthropictechnologies.vercel.app" target="_blank">zenthropictechnologies.vercel.app</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ─── SCRIPTS ────────────────────────────────────────────────── -->
+<script>
+  // Navbar scroll effect
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 20) {
+      navbar.style.background = 'rgba(6,10,16,0.97)';
+      navbar.style.boxShadow  = '0 1px 30px rgba(0,0,0,0.5)';
+    } else {
+      navbar.style.background = 'rgba(6,10,16,0.85)';
+      navbar.style.boxShadow  = 'none';
+    }
+  });
+
+  // Mobile menu
+  function toggleMenu() {
+    document.getElementById('mobile-menu').classList.toggle('open');
+  }
+  function closeMenu() {
+    document.getElementById('mobile-menu').classList.remove('open');
+  }
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Smooth scrolling for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      closeMenu();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // Contact form
+  function handleFormSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    // Simulate send (replace with real API call)
+    setTimeout(() => {
+      document.getElementById('contact-form').reset();
+      document.getElementById('form-success').style.display = 'block';
+      btn.textContent = 'Send Message →';
+      btn.disabled = false;
+    }, 1200);
+  }
+
+  // Typing animation for hero
+  const titles = [
+    'Business Intelligence. <span class="gradient-text">Simplified.</span>',
+    'Retail POS. <span class="gradient-text">Cloud-Powered.</span>',
+    'Multi-Counter. <span class="gradient-text">Always Synced.</span>',
+    'Built for Pakistan. <span class="gradient-text">Ready for the World.</span>',
+  ];
+  let titleIdx = 0;
+  const heroTitle = document.querySelector('.hero-title');
+  setInterval(() => {
+    titleIdx = (titleIdx + 1) % titles.length;
+    heroTitle.style.opacity = '0';
+    heroTitle.style.transform = 'translateY(10px)';
+    setTimeout(() => {
+      heroTitle.innerHTML = titles[titleIdx];
+      heroTitle.style.opacity = '1';
+      heroTitle.style.transform = 'translateY(0)';
+      heroTitle.style.transition = 'all 0.5s ease';
+    }, 400);
+  }, 4000);
+</script>
+
+</body>
+</html>
