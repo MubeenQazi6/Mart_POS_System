@@ -237,6 +237,14 @@
 
 **Rationale:**
 - Cashiers can hold active carts during peak retail hours without risk of data loss if the cashier switches screens, restarts the app, or recovers from an unexpected power loss.
-- Resuming a held bill unpacks the cart and deletes the held record from SQLite atomically.
+---
+
+## ADR-022: Multi-Module Schema Isolation & Multi-Environment SDLC (DEV -> UAT -> PRD)
+
+**Decision:**
+1. **PostgreSQL Schema Isolation:** Zentropic Technologies systems (MartPOS, SchoolIQ, HREdge, StockMaster, LedgerX, DineOS) live within the same enterprise PostgreSQL database instance using isolated schemas (`public`, `mart_pos`, `school_iq`, `hr_edge`, `stock_master`). This ensures zero table collision, independent migration lifecycles, and atomic multi-system cross-reporting without data cross-talk.
+2. **SDLC Promotion Gates:** Features, bug fixes, and database migrations are strictly governed by a 3-tier SDLC lifecycle:
+   - `DEV` (Local) -> `UAT` (Staging branch, dedicated UAT database, stakeholder verification) -> `PRD` (Production branch `main`, verified migrations only).
+3. **No Direct PRD Commits:** No unverified changes reach PRD until signed off in the UAT environment.
 
 
