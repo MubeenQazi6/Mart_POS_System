@@ -13,6 +13,7 @@
     "preview": "electron-vite preview",
     "package": "npm run build && electron-builder --win",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "site:dev": "npx vite packages/company-site",
     "generate:license": "npm --prefix license-generator-tool start",
     "package:license-tool": "npm --prefix license-generator-tool run package",
     "machine:code": "tsx scripts/generate-machine-code.ts",
