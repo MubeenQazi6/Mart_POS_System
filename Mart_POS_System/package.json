@@ -1,0 +1,104 @@
+{
+  "name": "martpos",
+  "version": "0.1.0",
+  "description": "Offline Mart POS & Inventory Management Desktop Application",
+  "author": "MARTPOS",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "preview": "electron-vite preview",
+    "package": "npm run build && electron-builder --win",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "lint": "eslint .",
+    "machine:code": "tsx scripts/generate-machine-code.ts",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"docs/**/*.md\" \"*.md\"",
+    "verify:preload": "npm run build && node scripts/verify-preload.mjs",
+    "test:phase2": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase2-returns-exchanges.ts",
+    "test:phase3": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase3-inventory-purchases-audit.ts",
+    "test:phase5": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase5.ts",
+    "test:phase6": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase6.ts",
+    "test:phase7": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase7.ts",
+    "test:phase8": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase8.ts",
+    "test:phase9": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase9.ts",
+    "test:phase10": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase10.ts",
+    "test:e2e": "npx tsx --tsconfig tsconfig.node.json scripts/test-e2e-workflow.ts",
+    "test:licensing": "npx tsx --tsconfig tsconfig.node.json scripts/test-licensing.ts",
+    "test:discount-returns": "npx tsx --tsconfig tsconfig.node.json scripts/test-bill-discount-returns.ts",
+    "test:all": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase2-returns-exchanges.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase3-inventory-purchases-audit.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase5.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase6.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase7.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase8.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase9.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase10.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-e2e-workflow.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-licensing.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-bill-discount-returns.ts"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.1",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-orm": "^0.44.4",
+    "jsbarcode": "^3.12.3",
+    "lucide-react": "^0.540.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-hook-form": "^7.62.0",
+    "react-router-dom": "^7.18.2",
+    "recharts": "^3.1.2",
+    "zod": "^4.0.17",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/jsbarcode": "^3.11.4",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.1",
+    "autoprefixer": "^10.4.21",
+    "drizzle-kit": "^0.31.10",
+    "electron": "^37.10.3",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^4.0.0",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.40.0",
+    "vite": "^7.1.3"
+  },
+  "build": {
+    "appId": "com.martpos.desktop",
+    "productName": "MARTPOS",
+    "copyright": "Copyright © 2026 MARTPOS",
+    "directories": {
+      "output": "release",
+      "buildResources": "resources"
+    },
+    "files": [
+      "out/**/*",
+      "src/database/migrations/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MARTPOS"
+    }
+  }
+}

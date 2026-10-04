@@ -1,0 +1,59 @@
+{
+  "name": "martpos-license-generator-tool",
+  "version": "1.0.0",
+  "description": "Offline Private Key License Generator for MARTPOS Developer",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "serve": "node server.js",
+    "package": "electron-builder --win"
+  },
+  "keywords": [
+    "license",
+    "generator",
+    "ed25519",
+    "pos"
+  ],
+  "author": "MARTPOS Team",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "44.2.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "electronVersion": "44.2.0",
+    "appId": "com.martpos.license-generator",
+    "productName": "MARTPOS-License-Generator",
+    "copyright": "Copyright © 2026 MARTPOS",
+    "directories": {
+      "output": "release",
+      "buildResources": "resources"
+    },
+    "icon": "resources/icon.ico",
+    "files": [
+      "main.js",
+      "preload.js",
+      "generator.js",
+      "index.html",
+      "package.json"
+    ],
+    "win": {
+      "icon": "resources/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MARTPOS License Generator"
+    }
+  }
+}

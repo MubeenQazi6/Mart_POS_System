@@ -1,0 +1,1 @@
+ALTER TABLE `product_barcodes` ADD `is_active` integer DEFAULT true NOT NULL;

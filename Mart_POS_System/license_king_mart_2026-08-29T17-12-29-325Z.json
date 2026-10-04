@@ -1,0 +1,21 @@
+{
+  "payload": {
+    "license_id": "LIC-20260829-BC0C63",
+    "customer_name": "king_mart",
+    "business_name": "king_mart",
+    "machine_fingerprint": "02B2-EBB0-3DF7-A488",
+    "issued_at": "2026-08-29",
+    "expires_at": "2027-08-29",
+    "max_terminals": 1,
+    "features": [
+      "pos",
+      "inventory",
+      "purchases",
+      "customers",
+      "reports",
+      "finance",
+      "returns"
+    ]
+  },
+  "signature": "N3FRAgcRdYBSbyEKPHExnSPv/xz95omvu5pNPZ78JLxeEXD5TAuJINAu57g33NS2+T9TWYknbyUpdx7vDZNbDQ=="
+}

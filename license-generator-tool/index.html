@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MARTPOS License Generator (Developer Suite)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #111827;
+      --bg-input: #1f2937;
+      --bg-input-hover: #283548;
+      --border-color: #374151;
+      --border-focus: #3b82f6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #ef4444;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #334155;
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 22px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    }
+
+    .header-titles h1 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .header-titles p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .sec-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sec-badge::before {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    /* Grid Layout */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card Panels */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Form controls */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-control {
+      width: 100%;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      background-color: var(--bg-input-hover);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .quick-btn {
+      position: absolute;
+      right: 6px;
+      background: #374151;
+      border: none;
+      color: #93c5fd;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .quick-btn:hover {
+      background: #4b5563;
+    }
+
+    /* Radio / Toggle Group */
+    .toggle-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background-color: #0f172a;
+      padding: 4px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      margin-bottom: 12px;
+    }
+
+    .toggle-item {
+      cursor: pointer;
+      text-align: center;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .toggle-item.active {
+      background-color: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+
+    .expiry-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .expiry-chip {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      padding: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+
+    .expiry-chip:hover, .expiry-chip.active {
+      border-color: #60a5fa;
+      color: #93c5fd;
+      background-color: #1e293b;
+    }
+
+    /* Features Badges */
+    .features-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .feature-tag {
+      font-size: 11px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: #cbd5e1;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+
+    .feature-tag.checked {
+      background-color: rgba(37, 99, 235, 0.2);
+      border-color: #3b82f6;
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    /* Primary Action Button */
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      margin-top: 18px;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+
+    /* Output Panel */
+    .output-card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: rgba(100, 116, 139, 0.2);
+      color: #94a3b8;
+    }
+
+    .status-pill.success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .code-preview-box {
+      flex: 1;
+      min-height: 380px;
+      background-color: #090d16;
+      border: 1px solid #1e293b;
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      color: #93c5fd;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-y: auto;
+      max-height: 440px;
+      user-select: text;
+    }
+
+    .code-placeholder {
+      display: flex;
+      height: 100%;
+      min-height: 340px;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 13px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .output-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn-action {
+      background-color: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover:not(:disabled) {
+      background-color: #334155;
+      border-color: #475569;
+      color: white;
+    }
+
+    .btn-action:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-action.success-highlight {
+      background-color: rgba(16, 185, 129, 0.2);
+      border-color: #10b981;
+      color: #34d399;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border: 1px solid #3b82f6;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-info">
+        <div class="logo-badge">M</div>
+        <div class="header-titles">
+          <h1>MARTPOS Master License Generator</h1>
+          <p>Internal Developer Signing Tool &bull; Offline Ed25519 Cryptography</p>
+        </div>
+      </div>
+      <div class="sec-badge">
+        Isolated Developer Vault
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="content-grid">
+      <!-- Input Form -->
+      <div class="card">
+        <div class="card-title">
+          <span>⚙️ License Parameters</span>
+        </div>
+
+        <form id="licenseForm" onsubmit="handleGenerate(event)">
+          <!-- Machine Code -->
+          <div class="form-group">
+            <label for="machineCode">Machine Code (Hardware Binding)</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="machineCode"
+                class="form-control font-mono"
+                placeholder="e.g. 5E6B-189D-8B07-7BDD or *"
+                required
+              />
+              <button type="button" class="quick-btn" onclick="setWildcardMachine()">Any (*)</button>
+            </div>
+          </div>
+
+          <!-- Customer Name -->
+          <div class="form-group">
+            <label for="customerName">Customer / Owner Name</label>
+            <input
+              type="text"
+              id="customerName"
+              class="form-control"
+              placeholder="e.g. Muhammad Ahmad"
+              required
+            />
+          </div>
+
+          <!-- Business Name -->
+          <div class="form-group">
+            <label for="businessName">Store / Business Name</label>
+            <input
+              type="text"
+              id="businessName"
+              class="form-control"
+              placeholder="e.g. Kings Mart Supermarket"
+              required
+            />
+          </div>
+
+          <!-- License Type Toggle -->
+          <div class="form-group">
+            <label>License Validity Model</label>
+            <div class="toggle-group">
+              <div id="toggleLifetime" class="toggle-item active" onclick="setLicenseType('lifetime')">
+                ♾️ Lifetime License
+              </div>
+              <div id="toggleExpiring" class="toggle-item" onclick="setLicenseType('expiring')">
+                ⏳ Time-Limited
+              </div>
+            </div>
+
+            <div id="expiringBox" style="display: none; margin-top: 10px;">
+              <label for="expiresMonths">Duration in Months:</label>
+              <div class="input-wrapper">
+                <input
+                  type="number"
+                  id="expiresMonths"
+                  class="form-control"
+                  min="1"
+                  max="120"
+                  value="12"
+                />
+              </div>
+              <div class="expiry-options">
+                <div class="expiry-chip" onclick="setMonths(1)">1 Month</div>
+                <div class="expiry-chip" onclick="setMonths(3)">3 Months</div>
+                <div class="expiry-chip" onclick="setMonths(6)">6 Months</div>
+                <div class="expiry-chip active" onclick="setMonths(12)">1 Year</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div class="form-group">
+            <label>Enabled Modules &amp; Features</label>
+            <div class="features-grid">
+              <div class="feature-tag checked" data-feature="pos" onclick="toggleFeature(this)">POS Checkout</div>
+              <div class="feature-tag checked" data-feature="inventory" onclick="toggleFeature(this)">Inventory</div>
+              <div class="feature-tag checked" data-feature="reports" onclick="toggleFeature(this)">Analytics &amp; Reports</div>
+              <div class="feature-tag checked" data-feature="finance" onclick="toggleFeature(this)">Finance &amp; Accounts</div>
+              <div class="feature-tag checked" data-feature="multi_user" onclick="toggleFeature(this)">Multi-User &amp; Roles</div>
+              <div class="feature-tag checked" data-feature="khata" onclick="toggleFeature(this)">Customer Khata</div>
+              <div class="feature-tag checked" data-feature="backup" onclick="toggleFeature(this)">Cloud/Local Backup</div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit">
+            <span>✨ Generate Signed License</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Output Preview -->
+      <div class="card output-card">
+        <div class="preview-header">
+          <div class="card-title" style="margin-bottom: 0;">
+            <span>📄 Signed JSON Output</span>
+          </div>
+          <div id="statusBadge" class="status-pill">
+            Awaiting input
+          </div>
+        </div>
+
+        <div id="codePreview" class="code-preview-box">
+          <div class="code-placeholder">
+            Fill in the parameters and click "Generate Signed License" to produce a cryptographically authenticated license file.
+          </div>
+        </div>
+
+        <div class="output-actions">
+          <button id="btnCopy" class="btn-action" onclick="copyLicense()" disabled>
+            <span>📋 Copy to Clipboard</span>
+          </button>
+          <button id="btnSave" class="btn-action" onclick="saveLicense()" disabled>
+            <span>💾 Save .JSON File</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Notification message</div>
+
+  <script>
+    let currentLicenseType = 'lifetime';
+    let generatedLicenseData = null;
+
+    function setLicenseType(type) {
+      currentLicenseType = type;
+      const toggleLifetime = document.getElementById('toggleLifetime');
+      const toggleExpiring = document.getElementById('toggleExpiring');
+      const expiringBox = document.getElementById('expiringBox');
+
+      if (type === 'lifetime') {
+        toggleLifetime.classList.add('active');
+        toggleExpiring.classList.remove('active');
+        expiringBox.style.display = 'none';
+      } else {
+        toggleLifetime.classList.remove('active');
+        toggleExpiring.classList.add('active');
+        expiringBox.style.display = 'block';
+      }
+    }
+
+    function setMonths(months) {
+      document.getElementById('expiresMonths').value = months;
+      document.querySelectorAll('.expiry-chip').forEach(el => el.classList.remove('active'));
+      if (event && event.target) {
+        event.target.classList.add('active');
+      }
+    }
+
+    function setWildcardMachine() {
+      const el = document.getElementById('machineCode');
+      el.value = '*';
+      el.focus();
+    }
+
+    function toggleFeature(el) {
+      el.classList.toggle('checked');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    }
+
+    async function handleGenerate(e) {
+      e.preventDefault();
+
+      const machineCode = document.getElementById('machineCode').value.trim();
+      const customerName = document.getElementById('customerName').value.trim();
+      const businessName = document.getElementById('businessName').value.trim();
+
+      const expiresMonths = currentLicenseType === 'lifetime'
+        ? null
+        : parseInt(document.getElementById('expiresMonths').value, 10) || 12;
+
+      const checkedFeatures = Array.from(document.querySelectorAll('.feature-tag.checked'))
+        .map(el => el.getAttribute('data-feature'));
+
+      const input = {
+        machineCode,
+        customerName,
+        businessName,
+        expiresMonths,
+        features: checkedFeatures.length > 0 ? checkedFeatures : undefined,
+      };
+
+      try {
+        let result;
+        if (window.licenseApi && window.licenseApi.generateLicense) {
+          result = await window.licenseApi.generateLicense(input);
+        } else {
+          // Web fallback
+          const res = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input),
+          });
+          result = await res.json();
+        }
+
+        if (result && result.success && result.data) {
+          generatedLicenseData = result.data;
+          renderOutput(result.data);
+          showToast('✅ Signed license generated and verified!');
+        } else {
+          alert('Failed to generate license: ' + (result?.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    function renderOutput(data) {
+      const preview = document.getElementById('codePreview');
+      preview.textContent = data.json;
+
+      const badge = document.getElementById('statusBadge');
+      badge.textContent = '✅ Ed25519 Verified';
+      badge.className = 'status-pill success';
+
+      document.getElementById('btnCopy').disabled = false;
+      document.getElementById('btnSave').disabled = false;
+    }
+
+    async function copyLicense() {
+      if (!generatedLicenseData) return;
+
+      if (window.licenseApi && window.licenseApi.copyToClipboard) {
+        await window.licenseApi.copyToClipboard(generatedLicenseData.json);
+      } else {
+        await navigator.clipboard.writeText(generatedLicenseData.json);
+      }
+
+      const btn = document.getElementById('btnCopy');
+      const origText = btn.innerHTML;
+      btn.innerHTML = '<span>✅ Copied!</span>';
+      btn.classList.add('success-highlight');
+      showToast('Copied JSON to clipboard');
+
+      setTimeout(() => {
+        btn.innerHTML = origText;
+        btn.classList.remove('success-highlight');
+      }, 2000);
+    }
+
+    async function saveLicense() {
+      if (!generatedLicenseData) return;
+
+      const custName = generatedLicenseData.payload.customer_name.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `license_${custName}_${generatedLicenseData.payload.license_id}.json`;
+
+      if (window.licenseApi && window.licenseApi.saveLicenseFile) {
+        const res = await window.licenseApi.saveLicenseFile(filename, generatedLicenseData.json);
+        if (res.success) {
+          showToast(`Saved to ${res.filePath}`);
+        }
+      } else {
+        // Browser download fallback
+        const blob = new Blob([generatedLicenseData.json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`Downloaded ${filename}`);
+      }
+    }
+  </script>
+</body>
+</html>

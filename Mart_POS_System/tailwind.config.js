@@ -1,0 +1,65 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: 'class',
+  content: ['./src/renderer/index.html', './src/renderer/src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: 'var(--color-brand-50, #fff7ec)',
+          100: 'var(--color-brand-100, #ffecd2)',
+          200: 'var(--color-brand-200, #fbd9a8)',
+          300: 'var(--color-brand-300, #f7c179)',
+          400: 'var(--color-brand-400, #f7a83e)',
+          500: 'var(--color-brand-500, #f0932a)',
+          600: 'var(--color-brand-600, #d97e15)',
+          700: 'var(--color-brand-700, #b3660f)',
+          800: 'var(--color-brand-800, #8a4f0c)',
+          900: 'var(--color-brand-900, #6b3e0a)',
+          950: 'var(--color-brand-950, #3a2005)',
+        },
+        navy: {
+          50: 'var(--color-navy-50, #f2f4f6)',
+          100: 'var(--color-navy-100, #e2e6ea)',
+          200: 'var(--color-navy-200, #c3cad3)',
+          300: 'var(--color-navy-300, #97a3b3)',
+          400: 'var(--color-navy-400, #5f7085)',
+          500: 'var(--color-navy-500, #3b4a5e)',
+          600: 'var(--color-navy-600, #232f3e)',
+          700: 'var(--color-navy-700, #1b2530)',
+          800: 'var(--color-navy-800, #131921)',
+          900: 'var(--color-navy-900, #0d1218)',
+          950: 'var(--color-navy-950, #060809)',
+        },
+        primary: {
+          DEFAULT: 'var(--color-primary, #f0932a)',
+          hover: 'var(--color-primary-hover, #e07a10)',
+          active: 'var(--color-primary-active, #c8690c)',
+          soft: 'var(--color-primary-soft, #fff7ec)',
+          softText: 'var(--color-primary-soft-text, #9a4e0a)',
+          border: 'var(--color-primary-border, #fbd9a8)',
+          ring: 'var(--color-primary-ring, #f0932a)',
+        },
+        surface: {
+          DEFAULT: '#ffffff',
+          muted: '#f8fafc',
+          border: '#e2e8f0',
+          dark: '#131921',
+          'dark-muted': '#0d1218',
+          'dark-border': '#1b2530',
+          'dark-card': '#1b2530',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
+      },
+      boxShadow: {
+        xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        '2xs': '0 1px 1px 0 rgba(0, 0, 0, 0.03)',
+        subtle: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        elevated: '0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+      },
+    },
+  },
+  plugins: [],
+};

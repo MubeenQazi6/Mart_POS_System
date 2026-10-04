@@ -1,0 +1,1 @@
+ALTER TABLE `sale_items` ADD COLUMN `is_manual` integer NOT NULL DEFAULT 0;

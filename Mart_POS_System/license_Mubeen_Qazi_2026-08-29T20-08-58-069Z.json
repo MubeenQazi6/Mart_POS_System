@@ -1,0 +1,21 @@
+{
+  "payload": {
+    "license_id": "LIC-20260829-B4A125",
+    "customer_name": "Mubeen Qazi",
+    "business_name": "Kings Mart",
+    "machine_fingerprint": "010C-8CEE-2D4C-143E",
+    "issued_at": "2026-08-29",
+    "expires_at": "2027-08-29",
+    "max_terminals": 1,
+    "features": [
+      "pos",
+      "inventory",
+      "purchases",
+      "customers",
+      "reports",
+      "finance",
+      "returns"
+    ]
+  },
+  "signature": "FPZxrKlKw86zCfTH3p/FATeZPLrntyyE52QoqLEesMoC5L1x4DHLNT67j469F3BqJBD/8fxVY0B93DX/1we5Bw=="
+}

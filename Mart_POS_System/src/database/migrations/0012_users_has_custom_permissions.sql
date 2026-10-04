@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN has_custom_permissions INTEGER NOT NULL DEFAULT 0;

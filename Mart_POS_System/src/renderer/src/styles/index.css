@@ -1,0 +1,321 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  MartPOS — Amazon-inspired professional theme
+  Navy (header/chrome) + Amazon Orange (primary actions)
+  Tailwind v3 compatible (no v4-only utilities like shadow-xs)
+*/
+
+:root {
+  /* Primary action color = Amazon orange */
+  --color-primary: #f0932a;
+  --color-primary-hover: #e07a10;
+  --color-primary-active: #c8690c;
+  --color-primary-soft: #fff7ec;
+  --color-primary-soft-text: #9a4e0a;
+  --color-primary-border: #fbd9a8;
+  --color-primary-ring: #f0932a;
+  --color-primary-gradient: linear-gradient(135deg, #f7a83e 0%, #e07a10 100%);
+  --color-primary-contrast: #131921;
+
+  /* Brand scale — orange, used for accents/badges/highlights */
+  --color-brand-50: #fff7ec;
+  --color-brand-100: #ffecd2;
+  --color-brand-200: #fbd9a8;
+  --color-brand-300: #f7c179;
+  --color-brand-400: #f7a83e;
+  --color-brand-500: #f0932a;
+  --color-brand-600: #d97e15;
+  --color-brand-700: #b3660f;
+  --color-brand-800: #8a4f0c;
+  --color-brand-900: #6b3e0a;
+  --color-brand-950: #3a2005;
+
+  /* Navy scale — used for header/nav/chrome, mirrors Amazon's dark UI */
+  --color-navy-50: #f2f4f6;
+  --color-navy-100: #e2e6ea;
+  --color-navy-200: #c3cad3;
+  --color-navy-300: #97a3b3;
+  --color-navy-400: #5f7085;
+  --color-navy-500: #3b4a5e;
+  --color-navy-600: #232f3e;
+  --color-navy-700: #1b2530;
+  --color-navy-800: #131921;
+  --color-navy-900: #0d1218;
+  --color-navy-950: #060809;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+
+  body {
+    @apply bg-slate-50 font-sans text-slate-900 antialiased selection:bg-brand-500 selection:text-white dark:bg-navy-900 dark:text-slate-100;
+  }
+
+  * {
+    @apply border-surface-border dark:border-navy-700;
+    touch-action: manipulation;
+  }
+
+  button,
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    min-height: 2.75rem;
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Sidebar scroll — thin thumb in the primary brand color */
+.sidebar-scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 9999px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-hover);
+}
+
+/* Smooth custom scrollbars for main content, tables, modals — uses brand color, not gray */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-brand-300);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-500);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-brand-700);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-500);
+}
+
+/* Firefox */
+* {
+  scrollbar-color: var(--color-brand-300) transparent;
+}
+
+.dark * {
+  scrollbar-color: var(--color-brand-700) transparent;
+}
+
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt-print-surface,
+  .receipt-print-surface *,
+  .cash-print-surface,
+  .cash-print-surface * {
+    visibility: visible;
+  }
+
+  .receipt-print-surface {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 16px;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    z-index: 9999999;
+  }
+
+  .cash-print-surface {
+    position: static;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 12px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .cash-print-surface table {
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+}
+
+@layer components {
+  .pos-input {
+    @apply border-slate-300 bg-white text-slate-900 placeholder-slate-400 selection:bg-brand-200 selection:text-slate-900 disabled:bg-slate-100 disabled:text-slate-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-500 dark:border-navy-600 dark:bg-navy-800 dark:text-slate-100 dark:placeholder-slate-500 dark:selection:bg-brand-900 dark:selection:text-slate-100 dark:disabled:bg-navy-950 dark:disabled:text-slate-600;
+  }
+
+  /* Primary CTA — Amazon-orange button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-navy-800 shadow-sm transition-all hover:bg-brand-600 hover:text-white active:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-50 select-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-surface-border bg-white px-4 py-2 text-sm font-medium text-navy-700 shadow-sm transition-all hover:bg-slate-50 active:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-50 select-none dark:border-navy-600 dark:bg-navy-700 dark:text-slate-200 dark:hover:bg-navy-600;
+  }
+
+  /* Dark "header/chrome" button style, e.g. for topbar actions on a navy background */
+  .btn-chrome {
+    @apply inline-flex items-center justify-center rounded-lg bg-navy-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-navy-500 active:bg-navy-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50 select-none;
+  }
+
+  .card {
+    @apply rounded-xl border border-surface-border bg-white shadow-sm transition-all dark:border-navy-700 dark:bg-navy-800;
+  }
+
+  .card-hover {
+    @apply hover:border-brand-300 dark:hover:border-brand-700 hover:shadow-md;
+  }
+
+  .badge-brand {
+    @apply bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950 dark:text-brand-300 dark:border-brand-800;
+  }
+
+  /* Top navigation bar — Amazon-style dark navy header */
+  .topbar {
+    @apply bg-navy-800 text-slate-100 border-b border-navy-700 shadow-sm;
+  }
+
+  .data-table-header {
+    @apply bg-slate-50 dark:bg-navy-800 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-surface-border dark:border-navy-700;
+  }
+
+  .data-table-row {
+    @apply border-b border-slate-100 dark:border-navy-700 transition-colors hover:bg-slate-50 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200;
+  }
+
+  /* ============================
+     Tabs
+     Structure: .tab-list > .tab (+ .tab-active on the selected one)
+     ============================ */
+
+  .tab-list {
+    @apply flex items-center gap-1 border-b border-surface-border dark:border-navy-700;
+  }
+
+  .tab {
+    @apply inline-flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-navy-700 dark:hover:text-slate-100;
+  }
+
+  .tab-active {
+    @apply bg-brand-50 text-brand-700 hover:bg-brand-50 hover:text-brand-700 dark:bg-navy-700 dark:text-brand-400 dark:hover:bg-navy-700 dark:hover:text-brand-400;
+  }
+
+  /* ============================
+     Sidebar nav items
+     Structure: <nav> .sidebar-scroll > .sidebar-link (+ .sidebar-link-active on the current route)
+     ============================ */
+
+  .sidebar-link {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-navy-700 hover:text-white hover:shadow-[0_0_0_1px_var(--color-primary-border),0_2px_6px_-1px_rgba(240,147,42,0.35)];
+  }
+
+  .sidebar-link-active {
+    @apply bg-brand-500 text-navy-800 shadow-[0_2px_10px_-2px_rgba(240,147,42,0.55)] hover:bg-brand-600 hover:text-white hover:shadow-[0_2px_10px_-2px_rgba(240,147,42,0.55)];
+  }
+
+  .dark .sidebar-link {
+    @apply hover:bg-navy-700 hover:text-white hover:shadow-[0_0_0_1px_var(--color-primary-border),0_2px_6px_-1px_rgba(240,147,42,0.45)];
+  }
+
+  .dark .sidebar-link-active {
+    @apply bg-brand-500 text-navy-900 shadow-[0_2px_12px_-2px_rgba(240,147,42,0.6)];
+  }
+
+  /* ============================
+     Modal system
+     Structure: .modal-overlay > .modal-panel.modal-{sm|md|lg|xl} > .modal-header + .modal-body + .modal-footer
+     ============================ */
+
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-navy-950/60 p-4;
+  }
+
+  /* Base panel: always a column flex box capped to viewport height so the
+     footer can never get pushed off-screen by long body content. */
+  .modal-panel {
+    @apply flex w-full flex-col max-h-[85vh] overflow-hidden rounded-xl bg-white shadow-elevated dark:bg-navy-800;
+  }
+
+  /* Width variants — pick one alongside .modal-panel */
+  .modal-sm {
+    @apply max-w-sm;
+  }
+
+  .modal-md {
+    @apply max-w-lg;
+  }
+
+  .modal-lg {
+    @apply max-w-2xl;
+  }
+
+  .modal-xl {
+    @apply max-w-4xl;
+  }
+
+  .modal-header {
+    @apply shrink-0 flex items-center justify-between gap-3 border-b border-surface-border px-5 py-4 dark:border-navy-700;
+  }
+
+  /* The only part allowed to scroll/grow. min-h-0 is required — flex
+     children default to min-height:auto, which lets this grow past the
+     panel's max-h and push the footer out of view. */
+  .modal-body {
+    @apply min-h-0 flex-1 overflow-y-auto px-5 py-4;
+  }
+
+  /* Footer never shrinks and never gets clipped. flex-wrap means that even
+     with many/long buttons on a narrow screen, they wrap onto a new line
+     instead of overflowing or disappearing. */
+  .modal-footer {
+    @apply shrink-0 flex flex-wrap items-center justify-end gap-2 border-t border-surface-border bg-white px-5 py-4 dark:border-navy-700 dark:bg-navy-800;
+  }
+}
