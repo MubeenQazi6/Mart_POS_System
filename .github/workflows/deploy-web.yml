@@ -39,6 +39,9 @@ jobs:
 
       - name: Build Web Application
         working-directory: packages/web
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://mydhynxkhoqodprnxljv.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGh5cnhraG9xb2Rwcm54aWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMDY1ODgsImV4cCI6MjEwNjY4MjU4OH0.Oq_a5hscbVqnY2wEug5sZGCBluRTeh2A7WZLj0ixFOM' }}
         run: npm run build
 
       - name: Setup Pages
