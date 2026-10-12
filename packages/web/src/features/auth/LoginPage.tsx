@@ -25,9 +25,9 @@ export function LoginPage(): React.JSX.Element {
     setError(null);
     setLoading(true);
     try {
-      const ok = await login(username, password);
-      if (!ok) {
-        setError('Invalid username or password. Please use admin / admin123 or create a new account.');
+      const res = await login(username, password);
+      if (!res.success) {
+        setError(res.error ?? 'Invalid username or password.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed');
@@ -61,7 +61,10 @@ export function LoginPage(): React.JSX.Element {
     setError(null);
     setLoading(true);
     try {
-      await loginWithGoogle();
+      const res = await loginWithGoogle();
+      if (!res.success) {
+        setError(res.error ?? 'Google sign in failed');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign in failed');
     } finally {

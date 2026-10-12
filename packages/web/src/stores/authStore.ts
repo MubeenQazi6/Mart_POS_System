@@ -38,9 +38,9 @@ interface AuthState {
   isInitializing: boolean;
 
   initAuth: () => Promise<void>;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (input: RegisterInput) => Promise<{ success: boolean; error?: string }>;
-  loginWithGoogle: () => Promise<boolean>;
+  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -185,7 +185,11 @@ export const useAuthStore = create<AuthState>((set) => ({
           password,
         });
 
-        if (!error && data.user && data.session) {
+        if (error) {
+          return { success: false, error: error.message };
+        }
+
+        if (data.user && data.session) {
           const sbUser = data.user;
 
           // Load or create org profile
@@ -212,21 +216,25 @@ export const useAuthStore = create<AuthState>((set) => ({
           localStorage.setItem('martpos_token', data.session.access_token);
           localStorage.setItem('martpos_user', JSON.stringify(webUser));
           set({ user: webUser, token: data.session.access_token, isAuthenticated: true });
-          return true;
+          return { success: true };
         }
       } catch (err) {
-        console.warn('[Auth] Supabase login failed, trying offline:', err);
+        console.warn('[Auth] Supabase login error:', err);
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : 'Supabase authentication failed',
+        };
       }
     }
 
-    // 2. Try backend API
+    // 2. Try backend API (if running)
     try {
       const res = await authApi.login(cleanUsername, password);
       if (res.success) {
         localStorage.setItem('martpos_token', res.data.token);
         localStorage.setItem('martpos_user', JSON.stringify(res.data.user));
         set({ user: res.data.user as WebUser, token: res.data.token, isAuthenticated: true });
-        return true;
+        return { success: true };
       }
     } catch {
       // Backend offline, fallback to offline accounts
@@ -253,10 +261,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('martpos_token', token);
       localStorage.setItem('martpos_user', JSON.stringify(localUser));
       set({ user: localUser, token, isAuthenticated: true });
-      return true;
+      return { success: true };
     }
 
-    return false;
+    return {
+      success: false,
+      error: 'Invalid credentials. For offline demo use admin / admin123, or create a new account.',
+    };
   },
 
   register: async ({ fullName, storeName, username, password }) => {
@@ -282,7 +293,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
 
         if (error) {
-          // If email already exists, give friendly message
           if (error.message.includes('already registered')) {
             return { success: false, error: 'This email is already registered. Please sign in.' };
           }
@@ -323,11 +333,11 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ user: webUser, token: data.session.access_token, isAuthenticated: true });
             return { success: true };
           } else {
-            // Email confirmation required
+            // Email confirmation required or pending
             return {
               success: false,
               error:
-                '✅ Account created! Please check your email to confirm, then sign in.',
+                '✅ Account created in Supabase! If email confirmation is enabled, check your inbox or confirm in Supabase dashboard, then sign in.',
             };
           }
         }
@@ -393,13 +403,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
 
         if (error) {
-          console.warn('[Auth] Google OAuth error:', error.message);
-        } else {
-          // OAuth redirects the page, so we won't reach here in a normal flow
-          return true;
+          return { success: false, error: error.message };
         }
+        return { success: true };
       } catch (err) {
-        console.warn('[Auth] Google OAuth failed:', err);
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : 'Google OAuth failed to initialize',
+        };
       }
     }
 
@@ -418,7 +429,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.setItem('martpos_token', token);
     localStorage.setItem('martpos_user', JSON.stringify(googleUser));
     set({ user: googleUser, token, isAuthenticated: true });
-    return true;
+    return { success: true };
   },
 
   logout: async () => {
