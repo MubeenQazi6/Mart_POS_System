@@ -13,7 +13,6 @@
     "preview": "electron-vite preview",
     "package": "npm run build && electron-builder --win",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
-    "site:dev": "npx vite packages/company-site",
     "generate:license": "npm --prefix license-generator-tool start",
     "package:license-tool": "npm --prefix license-generator-tool run package",
     "machine:code": "tsx scripts/generate-machine-code.ts",
@@ -34,7 +33,13 @@
     "test:barcode": "npx tsx --tsconfig tsconfig.node.json scripts/test-pos-barcode-scan.ts",
     "test:discount-returns": "npx tsx --tsconfig tsconfig.node.json scripts/test-bill-discount-returns.ts",
     "test:all": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase2-returns-exchanges.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase3-inventory-purchases-audit.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase5.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase6.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase7.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase8.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase9.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase10.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-e2e-workflow.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-licensing.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-bill-discount-returns.ts",
-    "package-win": "npm run build && electron-builder --win"
+    "package-win": "npm run build && electron-builder --win",
+    "build:web:uat": "npm --prefix packages/web run build:uat",
+    "build:web:prd": "npm --prefix packages/web run build:prd",
+    "build:warehouse:uat": "npm --prefix packages/warehouse-web run build:uat",
+    "build:warehouse:prd": "npm --prefix packages/warehouse-web run build:prd",
+    "build:all:uat": "npm run build:web:uat && npm run build:warehouse:uat",
+    "build:all:prd": "npm run build:web:prd && npm run build:warehouse:prd"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -68,7 +73,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "isomorphic-git": "^1.43.0",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "tailwindcss": "^3.4.17",

@@ -6,20 +6,13 @@
  * - Real-time database (PostgreSQL)
  * - Row Level Security (multi-tenant isolation)
  * - Storage (receipts, images)
- *
- * Setup Steps:
- * 1. Go to https://supabase.com → New Project
- * 2. Copy Project URL and anon key
- * 3. Create packages/web/.env with:
- *    VITE_SUPABASE_URL=https://xxx.supabase.co
- *    VITE_SUPABASE_ANON_KEY=your-anon-key
- * 4. Run the schema from database/supabase_schema.sql in Supabase SQL Editor
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { ENV_CONFIG } from '@/config/env';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const supabaseUrl = ENV_CONFIG.supabaseUrl || (import.meta.env.VITE_SUPABASE_URL as string | undefined);
+const supabaseAnonKey = ENV_CONFIG.supabaseAnonKey || (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
 
 // Check if Supabase is configured
 export const isSupabaseConfigured =
@@ -33,7 +26,7 @@ export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl!, supabaseAnonKey!, {
       auth: {
         persistSession: true,
-        storageKey: 'martpos_supabase_session',
+        storageKey: ENV_CONFIG.sessionStorageKey,
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },

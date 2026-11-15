@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { LoginPage } from '@/features/auth/LoginPage';
+import { UatGatekeeper } from '@/components/shell/UatGatekeeper';
 import { Crown, Loader2, Database, ShieldCheck } from 'lucide-react';
 import { APP_NAME } from '@shared/constants/app';
 
@@ -106,18 +107,20 @@ export default function App(): React.JSX.Element {
   }
 
   return (
-    <ErrorBoundary>
-      <ToastProvider>
-        {!isAuthenticated ? (
-          <LoginPage />
-        ) : (
-          <HashRouter>
-            <AppShell appInfo={appInfo}>
-              <AppRoutes />
-            </AppShell>
-          </HashRouter>
-        )}
-      </ToastProvider>
-    </ErrorBoundary>
+    <UatGatekeeper>
+      <ErrorBoundary>
+        <ToastProvider>
+          {!isAuthenticated ? (
+            <LoginPage />
+          ) : (
+            <HashRouter>
+              <AppShell appInfo={appInfo}>
+                <AppRoutes />
+              </AppShell>
+            </HashRouter>
+          )}
+        </ToastProvider>
+      </ErrorBoundary>
+    </UatGatekeeper>
   );
 }

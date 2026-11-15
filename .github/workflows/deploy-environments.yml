@@ -1,0 +1,77 @@
+name: Zenthropic Multi-Product CI & Environments Pipeline
+
+on:
+  push:
+    branches: [ main, master, uat, staging ]
+  workflow_dispatch:
+    inputs:
+      target_product:
+        description: 'Select Product to Build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - martpos-web
+          - warehouse-web
+      target_env:
+        description: 'Select Environment Target'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - uat
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-build:
+    name: Build & Verify ${{ github.event.inputs.target_product || 'All' }} (${{ github.event.inputs.target_env || (github.ref_name == 'uat' && 'uat' || 'production') }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Monorepo Root Dependencies
+        run: npm ci
+
+      - name: Verify MartPOS Desktop Typecheck & Core Build
+        run: npm run build
+
+      - name: Install MartPOS Web Dependencies
+        working-directory: packages/web
+        run: npm ci
+
+      - name: Build MartPOS Web (${{ github.event.inputs.target_env || (github.ref_name == 'uat' && 'uat' || 'production') }})
+        working-directory: packages/web
+        run: |
+          if [ "${{ github.event.inputs.target_env || (github.ref_name == 'uat' && 'uat' || 'production') }}" = "uat" ]; then
+            npm run build:uat
+          else
+            npm run build:prd
+          fi
+
+      - name: Install WarehouseOS Web Dependencies
+        working-directory: packages/warehouse-web
+        run: npm ci
+
+      - name: Build WarehouseOS Web (${{ github.event.inputs.target_env || (github.ref_name == 'uat' && 'uat' || 'production') }})
+        working-directory: packages/warehouse-web
+        run: |
+          if [ "${{ github.event.inputs.target_env || (github.ref_name == 'uat' && 'uat' || 'production') }}" = "uat" ]; then
+            npm run build:uat
+          else
+            npm run build:prd
+          fi
+
+      - name: Status Report
+        run: echo "Zenthropic Enterprise UAT & Production pipeline successfully verified!"

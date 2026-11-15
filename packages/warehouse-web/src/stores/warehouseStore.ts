@@ -8,6 +8,15 @@ import type {
   GrnStatus,
   TransferStatus,
 } from '../types/warehouse';
+import {
+  fetchCloudBins,
+  fetchCloudStock,
+  fetchCloudGrns,
+  createCloudGrn,
+  fetchCloudTransfers,
+  createCloudTransfer,
+  fetchCloudKpis,
+} from '../lib/warehouseSupabaseData';
 import { warehouseApi } from '../lib/warehouseWebAdapter';
 
 interface WarehouseState {
@@ -37,11 +46,11 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
     set({ isLoading: true });
     try {
       const [kpis, bins, stock, grns, transfers] = await Promise.all([
-        warehouseApi.getKPIs(),
-        warehouseApi.listBins(),
-        warehouseApi.listStock(),
-        warehouseApi.listGrns(),
-        warehouseApi.listTransfers(),
+        fetchCloudKpis(),
+        fetchCloudBins(),
+        fetchCloudStock(),
+        fetchCloudGrns(),
+        fetchCloudTransfers(),
       ]);
       set({ kpis, bins, stock, grns, transfers });
     } finally {
@@ -50,7 +59,7 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
   },
 
   createGrn: async (grnData) => {
-    await warehouseApi.createGrn(grnData);
+    await createCloudGrn(grnData);
     await get().loadAll();
   },
 
@@ -60,7 +69,7 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
   },
 
   createTransfer: async (orderData) => {
-    await warehouseApi.createTransfer(orderData);
+    await createCloudTransfer(orderData);
     await get().loadAll();
   },
 
