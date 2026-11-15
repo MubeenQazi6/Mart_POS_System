@@ -2,16 +2,200 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  WarehouseOS — Cyber Cyan & Slate Logistics Design System
+  Mirroring the MartPOS enterprise finish with high-tech supply chain aesthetics
+*/
+
 :root {
+  --color-primary: #06b6d4;
+  --color-primary-hover: #0891b2;
+  --color-primary-active: #0e7490;
+  --color-primary-soft: #ecfeff;
+  --color-primary-soft-text: #0e7490;
+  --color-primary-border: #a5f3fc;
+  --color-primary-ring: #06b6d4;
+  --color-primary-gradient: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%);
+  --color-primary-contrast: #083344;
+
+  --color-brand-50: #ecfeff;
+  --color-brand-100: #cffafe;
+  --color-brand-200: #a5f3fc;
+  --color-brand-300: #67e8f9;
+  --color-brand-400: #22d3ee;
+  --color-brand-500: #06b6d4;
+  --color-brand-600: #0891b2;
+  --color-brand-700: #0e7490;
+  --color-brand-800: #155e75;
+  --color-brand-900: #164e63;
+  --color-brand-950: #083344;
+
   --surface-base: #0b1120;
-  --surface-card: #111d33;
+  --surface-card: #0f172a;
   --surface-border: #1e293b;
 }
 
-body {
-  margin: 0;
-  background-color: var(--surface-base);
-  color: #f1f5f9;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+
+  body {
+    @apply bg-slate-950 font-sans text-slate-100 antialiased selection:bg-brand-500 selection:text-slate-950;
+  }
+
+  * {
+    @apply border-slate-800;
+    touch-action: manipulation;
+  }
+
+  button,
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    min-height: 2.5rem;
+  }
+}
+
+/* Sidebar scroll — thin cyan thumb */
+.sidebar-scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 9999px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-hover);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-500);
+}
+
+@layer components {
+  /* Inputs */
+  .pos-input {
+    @apply border-slate-700 bg-slate-900 text-slate-100 placeholder-slate-500 selection:bg-brand-900 selection:text-slate-100 disabled:bg-slate-950 disabled:text-slate-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-lg transition-colors text-sm;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-md shadow-cyan-500/20 transition-all hover:bg-cyan-400 active:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 disabled:cursor-not-allowed disabled:opacity-50 select-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-sm font-semibold text-slate-200 shadow-sm transition-all hover:bg-slate-700 hover:text-white active:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 disabled:cursor-not-allowed disabled:opacity-50 select-none;
+  }
+
+  .btn-chrome {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-300 border border-slate-800 shadow-sm transition-all hover:bg-slate-800 hover:text-white active:bg-slate-900 disabled:opacity-50 select-none;
+  }
+
+  /* Cards */
+  .card {
+    @apply rounded-xl border border-slate-800 bg-slate-900/90 shadow-lg backdrop-blur-sm transition-all;
+  }
+
+  .card-hover {
+    @apply hover:border-cyan-500/40 hover:shadow-cyan-500/5 hover:shadow-xl;
+  }
+
+  /* Badges */
+  .badge-brand {
+    @apply bg-cyan-950/60 text-cyan-300 border border-cyan-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold inline-flex items-center gap-1;
+  }
+
+  .badge-emerald {
+    @apply bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold inline-flex items-center gap-1;
+  }
+
+  .badge-amber {
+    @apply bg-amber-950/60 text-amber-300 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold inline-flex items-center gap-1;
+  }
+
+  .badge-rose {
+    @apply bg-rose-950/60 text-rose-300 border border-rose-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold inline-flex items-center gap-1;
+  }
+
+  /* Tables */
+  .data-table-header {
+    @apply bg-slate-900/80 text-left text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 px-4 py-3;
+  }
+
+  .data-table-row {
+    @apply border-b border-slate-800/60 transition-colors hover:bg-slate-800/40 text-slate-200 text-sm;
+  }
+
+  /* Tabs */
+  .tab-list {
+    @apply flex items-center gap-1 border-b border-slate-800;
+  }
+
+  .tab {
+    @apply inline-flex items-center gap-2 rounded-t-lg px-4 py-2.5 text-sm font-semibold text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100;
+  }
+
+  .tab-active {
+    @apply bg-slate-800/80 text-cyan-400 border-b-2 border-cyan-500;
+  }
+
+  /* Sidebar Links */
+  .sidebar-link {
+    @apply flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-300 transition-all hover:bg-slate-800/80 hover:text-white;
+  }
+
+  .sidebar-link-active {
+    @apply bg-gradient-to-r from-cyan-500 to-cyan-600 text-slate-950 font-bold shadow-lg shadow-cyan-500/25 hover:from-cyan-400 hover:to-cyan-500 hover:text-slate-950;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4;
+  }
+
+  .modal-panel {
+    @apply flex w-full flex-col max-h-[85vh] overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl;
+  }
+
+  .modal-header {
+    @apply shrink-0 flex items-center justify-between gap-3 border-b border-slate-800 px-6 py-4 bg-slate-900/80;
+  }
+
+  .modal-body {
+    @apply min-h-0 flex-1 overflow-y-auto px-6 py-5;
+  }
+
+  .modal-footer {
+    @apply shrink-0 flex flex-wrap items-center justify-end gap-2 border-t border-slate-800 bg-slate-900 px-6 py-4;
+  }
 }

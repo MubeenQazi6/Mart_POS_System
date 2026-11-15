@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Truck, Plus, Trash2 } from 'lucide-react';
+import { X, Truck, Plus, Trash2, MapPin, Layers, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useWarehouseStore } from '../../stores/warehouseStore';
+import { Button } from '../../components/ui/Button';
 import type { TransferItem } from '../../types/warehouse';
 
 interface CreateTransferModalProps {
@@ -29,21 +30,51 @@ export function CreateTransferModal({ onClose }: CreateTransferModalProps): Reac
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddItem = (): void => {
+    const itemOption = stock[items.length % stock.length] ?? stock[0];
     setItems((prev) => [
       ...prev,
       {
-        sku: stock[1]?.sku ?? 'WH-GRO-002',
-        productName: stock[1]?.productName ?? 'Dalda Oil 5L',
-        requestedQty: 20,
-        pickedQty: 20,
-        binSource: stock[1]?.primaryBin ?? 'B-01-03-A',
-        batchNumber: stock[1]?.batches[0]?.batchNumber,
+        sku: itemOption?.sku ?? 'WH-GRO-002',
+        productName: itemOption?.productName ?? 'Dalda Cooking Oil 5L',
+        requestedQty: 25,
+        pickedQty: 25,
+        binSource: itemOption?.primaryBin ?? 'B-01-03-A',
+        batchNumber: itemOption?.batches[0]?.batchNumber,
       },
     ]);
   };
 
   const handleRemoveItem = (index: number): void => {
     setItems((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleItemChange = (
+    index: number,
+    field: keyof Omit<TransferItem, 'id'>,
+    value: string | number
+  ): void => {
+    setItems((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
+
+  const handleSelectProduct = (index: number, selectedSku: string): void => {
+    const found = stock.find((s) => s.sku === selectedSku);
+    if (found) {
+      setItems((prev) => {
+        const copy = [...prev];
+        copy[index] = {
+          ...copy[index],
+          sku: found.sku,
+          productName: found.productName,
+          binSource: found.primaryBin,
+          batchNumber: found.batches[0]?.batchNumber,
+        };
+        return copy;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -74,12 +105,16 @@ export function CreateTransferModal({ onClose }: CreateTransferModalProps): Reac
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-[#0f172a] border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-[#0f172a] border border-slate-800 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+        {/* Header */}
         <div className="p-6 border-b border-slate-800 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-black text-white">Create Stock Transfer Order (STO)</h2>
+            <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <Truck className="h-5 w-5 text-cyan-400" />
+              <span>Create Stock Transfer Order (STO)</span>
+            </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Replenish retail branch MartPOS counters from warehouse bins.
+              Replenish retail branch MartPOS counters from warehouse storage bins.
             </p>
           </div>
           <button
@@ -90,146 +125,190 @@ export function CreateTransferModal({ onClose }: CreateTransferModalProps): Reac
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-6">
+          {/* Branch & Logistics Meta */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">Destination Retail Branch *</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Destination Retail Branch *</label>
               <select
                 value={destinationStore}
                 onChange={(e) => setDestinationStore(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
               >
-                <option value="MartPOS Retail - Al-Madina Main Super Mart">MartPOS - Al-Madina Main Super Mart</option>
-                <option value="MartPOS Retail - Gulberg Express Branch">MartPOS - Gulberg Express Branch</option>
-                <option value="MartPOS Retail - DHA Phase 5 Store">MartPOS - DHA Phase 5 Store</option>
+                <option value="MartPOS Retail - Al-Madina Main Super Mart">
+                  MartPOS Retail - Al-Madina Main Super Mart (DHA Phase 5)
+                </option>
+                <option value="MartPOS Retail - Gulberg Express Mart">
+                  MartPOS Retail - Gulberg Express Mart (Gulberg III)
+                </option>
+                <option value="MartPOS Retail - Bahria Town Super Store">
+                  MartPOS Retail - Bahria Town Super Store (Sector C)
+                </option>
+                <option value="MartPOS Retail - Johar Town Mega Mart">
+                  MartPOS Retail - Johar Town Mega Mart (G-1 Market)
+                </option>
               </select>
             </div>
+
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">Priority Level</label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as 'NORMAL' | 'URGENT' | 'CRITICAL')}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-cyan-400 font-semibold focus:outline-none focus:border-cyan-500"
-              >
-                <option value="NORMAL">NORMAL (Scheduled Dispatch)</option>
-                <option value="URGENT">URGENT (Stock Out Alert)</option>
-                <option value="CRITICAL">CRITICAL (Weekend Footfall)</option>
-              </select>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Dispatch Priority Level</label>
+              <div className="flex items-center gap-2">
+                {(['NORMAL', 'URGENT', 'CRITICAL'] as const).map((pr) => (
+                  <button
+                    type="button"
+                    key={pr}
+                    onClick={() => setPriority(pr)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${
+                      priority === pr
+                        ? pr === 'CRITICAL' || pr === 'URGENT'
+                          ? 'bg-rose-950 text-rose-300 border border-rose-800'
+                          : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
+                        : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {pr}
+                  </button>
+                ))}
+              </div>
             </div>
+
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">Vehicle Registration #</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Logistics Vehicle #</label>
               <input
                 type="text"
                 value={vehicleNumber}
                 onChange={(e) => setVehicleNumber(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyan-500"
               />
             </div>
+
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">Driver Name & Contact</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Assigned Driver & Phone</label>
               <input
                 type="text"
                 value={driverName}
                 onChange={(e) => setDriverName(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
 
-          <div className="border-t border-slate-800 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-slate-200">Items to Pick & Dispatch</span>
-              <button
+          {/* Line Items */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                <Layers className="h-4 w-4 text-cyan-400" />
+                <span>Dispatch SKUs to Pick</span>
+              </h3>
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleAddItem}
-                className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
+                leftIcon={<Plus className="h-3.5 w-3.5 text-cyan-400" />}
+                className="text-xs h-8 bg-slate-950 border-slate-800 hover:bg-slate-800"
               >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Add Item</span>
-              </button>
+                Add SKU Line
+              </Button>
             </div>
 
             <div className="space-y-3">
               {items.map((item, idx) => (
-                <div key={idx} className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center gap-3">
-                  <div className="flex-1">
-                    <label className="text-[10px] text-slate-400 block mb-1">Stock Item (From Available Bins)</label>
-                    <select
-                      value={item.sku}
-                      onChange={(e) => {
-                        const selected = stock.find((s) => s.sku === e.target.value);
-                        const updated = [...items];
-                        updated[idx].sku = e.target.value;
-                        updated[idx].productName = selected?.productName ?? '';
-                        updated[idx].binSource = selected?.primaryBin ?? '';
-                        updated[idx].batchNumber = selected?.batches[0]?.batchNumber;
-                        setItems(updated);
-                      }}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
-                    >
-                      {stock.map((s) => (
-                        <option key={s.id} value={s.sku}>
-                          {s.sku} — {s.productName} ({s.availableQty} Avail)
-                        </option>
-                      ))}
-                    </select>
+                <div
+                  key={idx}
+                  className="bg-slate-950/90 border border-slate-800/80 rounded-2xl p-4 space-y-3"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                    <div className="sm:col-span-5">
+                      <label className="text-[10px] text-slate-400 font-semibold block mb-1">Select Product Catalog SKU</label>
+                      <select
+                        value={item.sku}
+                        onChange={(e) => handleSelectProduct(idx, e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                      >
+                        {stock.map((s) => (
+                          <option key={s.id} value={s.sku}>
+                            {s.sku} — {s.productName} ({s.availableQty} in stock)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="text-[10px] text-slate-400 font-semibold block mb-1">Pick From Bin</label>
+                      <input
+                        type="text"
+                        value={item.binSource}
+                        onChange={(e) => handleItemChange(idx, 'binSource', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="text-[10px] text-slate-400 font-semibold block mb-1">Transfer Qty (Cartons)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.requestedQty}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          handleItemChange(idx, 'requestedQty', val);
+                          handleItemChange(idx, 'pickedQty', val);
+                        }}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono text-right focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-1 flex justify-end">
+                      {items.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(idx)}
+                          className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-xl transition"
+                          title="Remove line"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="w-28">
-                    <label className="text-[10px] text-slate-400 block mb-1">Dispatch Qty</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.requestedQty}
-                      onChange={(e) => {
-                        const updated = [...items];
-                        updated[idx].requestedQty = Number(e.target.value) || 1;
-                        updated[idx].pickedQty = updated[idx].requestedQty;
-                        setItems(updated);
-                      }}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-cyan-300 font-bold"
-                    />
-                  </div>
-                  {items.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveItem(idx)}
-                      className="p-2 text-slate-500 hover:text-rose-400 transition mt-4"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
                 </div>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1.5">Dispatch Instructions</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Gate-Pass / Security Dispatch Remarks</label>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Ensure cold chain temperature on transit..."
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+              placeholder="e.g. Special instructions for branch unloading bay, gate-pass seal #."
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             />
           </div>
 
-          <div className="border-t border-slate-800 pt-4 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs shadow-lg shadow-cyan-500/20 transition disabled:opacity-50"
-            >
-              <Truck className="h-4 w-4" />
-              <span>{isSubmitting ? 'Dispatching...' : 'Dispatch Pallets to Store'}</span>
-            </button>
+          {/* Footer Actions */}
+          <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+            <span className="text-xs text-slate-400 font-mono">
+              Total Dispatch: <strong className="text-white">{items.reduce((a, c) => a + c.requestedQty, 0)} Units</strong>
+            </span>
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="secondary" size="sm" onClick={onClose} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                isLoading={isSubmitting}
+                leftIcon={<CheckCircle2 className="h-4 w-4" />}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold border-0"
+              >
+                Issue Gate-Pass & Dispatch
+              </Button>
+            </div>
           </div>
         </form>
       </div>
