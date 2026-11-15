@@ -4,7 +4,7 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM"],
     "module": "esnext",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 
@@ -26,6 +26,7 @@
     "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["./src/*"],
+      "@renderer/*": ["./src/*"],
       "@shared/*": ["../../src/shared/*"]
     }
   },

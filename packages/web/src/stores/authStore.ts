@@ -15,6 +15,7 @@ export interface WebUser {
   id: number | string;
   username: string;
   fullName?: string;
+  full_name?: string;
   storeName?: string;
   role: string;
   trialEndsAt?: string;
@@ -33,15 +34,24 @@ interface RegisterInput {
 
 interface AuthState {
   user: WebUser | null;
+  currentUser: WebUser | null;
   token: string | null;
   isAuthenticated: boolean;
   isInitializing: boolean;
+  isLoading: boolean;
+  isLogoutModalOpen: boolean;
+
+  can: (permission?: string) => boolean;
+  canAccessModule: (moduleId?: string) => boolean;
 
   initAuth: () => Promise<void>;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (input: RegisterInput) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  logoutWithConfirmation: () => Promise<void>;
+  openLogoutModal: () => void;
+  closeLogoutModal: () => void;
 }
 
 // Built-in default accounts for instant offline / demo capability
@@ -86,11 +96,29 @@ function makeTrialDate(): string {
   return d.toISOString();
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
+  currentUser: null,
   token: localStorage.getItem('martpos_token'),
   isAuthenticated: false,
   isInitializing: true,
+  isLoading: false,
+  isLogoutModalOpen: false,
+
+  can: (_permission?: string) => true,
+  canAccessModule: (_moduleId?: string) => true,
+
+  openLogoutModal: () => {
+    set({ isLogoutModalOpen: true });
+  },
+
+  closeLogoutModal: () => {
+    set({ isLogoutModalOpen: false });
+  },
+
+  logoutWithConfirmation: async () => {
+    get().openLogoutModal();
+  },
 
   initAuth: async () => {
     set({ isInitializing: true });
@@ -109,11 +137,13 @@ export const useAuthStore = create<AuthState>((set) => ({
             .eq('owner_id', sbUser.id)
             .maybeSingle();
 
+          const userFullName = (sbUser.user_metadata?.full_name as string | undefined) ?? sbUser.email?.split('@')[0];
           const webUser: WebUser = {
             id: sbUser.id,
             supabaseId: sbUser.id,
             username: sbUser.email ?? 'user@supabase.io',
-            fullName: sbUser.user_metadata?.full_name as string | undefined,
+            fullName: userFullName,
+            full_name: userFullName,
             storeName: (orgData?.name as string | undefined) ?? 'My Mart POS',
             role: 'owner',
             plan: 'trial',
@@ -124,6 +154,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           localStorage.setItem('martpos_user', JSON.stringify(webUser));
           set({
             user: webUser,
+            currentUser: webUser,
             token: sessionData.session.access_token,
             isAuthenticated: true,
             isInitializing: false,
@@ -148,7 +179,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const res = await authApi.getCurrentUser();
       if (res.success && res.data) {
-        set({ user: res.data as WebUser, isAuthenticated: true, token: storedToken });
+        set({ user: res.data as WebUser, currentUser: res.data as WebUser, isAuthenticated: true, token: storedToken });
         set({ isInitializing: false });
         return;
       }
@@ -160,14 +191,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (storedUserRaw) {
       try {
         const cachedUser = JSON.parse(storedUserRaw) as WebUser;
-        set({ user: cachedUser, isAuthenticated: true, token: storedToken });
+        set({ user: cachedUser, currentUser: cachedUser, isAuthenticated: true, token: storedToken });
       } catch {
         localStorage.removeItem('martpos_token');
         localStorage.removeItem('martpos_user');
-        set({ user: null, isAuthenticated: false, token: null });
+        set({ user: null, currentUser: null, isAuthenticated: false, token: null });
       }
     } else {
-      set({ isAuthenticated: false, user: null, token: null });
+      set({ isAuthenticated: false, user: null, currentUser: null, token: null });
     }
 
     set({ isInitializing: false });
@@ -199,13 +230,15 @@ export const useAuthStore = create<AuthState>((set) => ({
             .eq('owner_id', sbUser.id)
             .maybeSingle();
 
+          const nameFromMeta =
+            (sbUser.user_metadata?.full_name as string | undefined) ??
+            sbUser.email?.split('@')[0];
           const webUser: WebUser = {
             id: sbUser.id,
             supabaseId: sbUser.id,
             username: sbUser.email ?? cleanUsername,
-            fullName:
-              (sbUser.user_metadata?.full_name as string | undefined) ??
-              sbUser.email?.split('@')[0],
+            fullName: nameFromMeta,
+            full_name: nameFromMeta,
             storeName: (orgData?.name as string | undefined) ?? 'My Mart POS',
             role: 'owner',
             plan: 'trial',
@@ -215,7 +248,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
           localStorage.setItem('martpos_token', data.session.access_token);
           localStorage.setItem('martpos_user', JSON.stringify(webUser));
-          set({ user: webUser, token: data.session.access_token, isAuthenticated: true });
+          set({ user: webUser, currentUser: webUser, token: data.session.access_token, isAuthenticated: true });
           return { success: true };
         }
       } catch (err) {
@@ -251,6 +284,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         id: Math.floor(Math.random() * 100000),
         username: match.username,
         fullName: match.fullName,
+        full_name: match.fullName,
         storeName: match.storeName,
         role: match.role,
         plan: 'trial',
@@ -260,7 +294,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       localStorage.setItem('martpos_token', token);
       localStorage.setItem('martpos_user', JSON.stringify(localUser));
-      set({ user: localUser, token, isAuthenticated: true });
+      set({ user: localUser, currentUser: localUser, token, isAuthenticated: true });
       return { success: true };
     }
 
@@ -321,6 +355,7 @@ export const useAuthStore = create<AuthState>((set) => ({
               supabaseId: data.user.id,
               username: cleanEmail,
               fullName: fullName.trim(),
+              full_name: fullName.trim(),
               storeName: storeName.trim() || 'My Mart POS',
               role: 'owner',
               plan: 'trial',
@@ -330,7 +365,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
             localStorage.setItem('martpos_token', data.session.access_token);
             localStorage.setItem('martpos_user', JSON.stringify(webUser));
-            set({ user: webUser, token: data.session.access_token, isAuthenticated: true });
+            set({ user: webUser, currentUser: webUser, token: data.session.access_token, isAuthenticated: true });
             return { success: true };
           } else {
             // Email confirmation required or pending
@@ -373,6 +408,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       id: Date.now(),
       username: newUser.username,
       fullName: newUser.fullName,
+      full_name: newUser.fullName,
       storeName: newUser.storeName,
       role: 'owner',
       plan: 'trial',
@@ -382,7 +418,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     localStorage.setItem('martpos_token', token);
     localStorage.setItem('martpos_user', JSON.stringify(webUser));
-    set({ user: webUser, token, isAuthenticated: true });
+    set({ user: webUser, currentUser: webUser, token, isAuthenticated: true });
     return { success: true };
   },
 
@@ -419,6 +455,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       id: 'g_' + Date.now(),
       username: 'demo@gmail.com',
       fullName: 'Demo Google User',
+      full_name: 'Demo Google User',
       storeName: 'Cloud Demo Mart',
       role: 'owner',
       plan: 'trial',
@@ -428,7 +465,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     localStorage.setItem('martpos_token', token);
     localStorage.setItem('martpos_user', JSON.stringify(googleUser));
-    set({ user: googleUser, token, isAuthenticated: true });
+    set({ user: googleUser, currentUser: googleUser, token, isAuthenticated: true });
     return { success: true };
   },
 
@@ -452,6 +489,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     localStorage.removeItem('martpos_token');
     localStorage.removeItem('martpos_user');
-    set({ user: null, token: null, isAuthenticated: false });
+    set({ user: null, currentUser: null, token: null, isAuthenticated: false });
   },
 }));

@@ -1,5 +1,9 @@
-import React, { type ElementType } from 'react';
+import { type ElementType } from 'react';
 import { NavLink } from 'react-router-dom';
+import { APP_NAME, NAV_SECTIONS } from '@shared/constants/app';
+import { Tooltip } from '@renderer/components/ui/Tooltip';
+import { useAuthStore } from '@renderer/stores/authStore';
+import { useSettingsStore } from '@renderer/stores/settingsStore';
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -13,70 +17,33 @@ import {
   Wallet,
   BarChart3,
   Barcode,
+  ShieldCheck,
   Settings,
+  Activity,
   Crown,
-  Sparkles,
+  Bell,
   ChevronLeft,
   ChevronRight,
-  CreditCard,
 } from 'lucide-react';
-import { useSettingsStore } from '@/stores/settingsStore';
-import { useAuthStore } from '@/stores/authStore';
 
-interface NavItem {
-  id: string;
-  name: string;
-  path: string;
-  icon: ElementType;
-}
-
-interface NavSection {
-  title: string;
-  items: NavItem[];
-}
-
-const NAV_SECTIONS: NavSection[] = [
-  {
-    title: 'Operations',
-    items: [
-      { id: 'dashboard', name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { id: 'pos', name: 'Point of Sale', path: '/pos', icon: ShoppingCart },
-    ],
-  },
-  {
-    title: 'Catalog & Stock',
-    items: [
-      { id: 'products', name: 'Products', path: '/products', icon: Package },
-      { id: 'inventory', name: 'Stock Levels', path: '/inventory', icon: Boxes },
-      { id: 'barcode-labels', name: 'Barcode Labels', path: '/barcode-labels', icon: Barcode },
-    ],
-  },
-  {
-    title: 'Trade & Accounts',
-    items: [
-      { id: 'purchases', name: 'Purchases', path: '/purchases', icon: Truck },
-      { id: 'suppliers', name: 'Suppliers', path: '/suppliers', icon: Building2 },
-      { id: 'customers', name: 'Customers', path: '/customers', icon: Users },
-      { id: 'returns', name: 'Returns', path: '/returns', icon: RotateCcw },
-    ],
-  },
-  {
-    title: 'Finance & Ledger',
-    items: [
-      { id: 'cash', name: 'Cash Register', path: '/cash', icon: Wallet },
-      { id: 'expenses', name: 'Expenses', path: '/expenses', icon: Receipt },
-      { id: 'reports', name: 'Reports', path: '/reports', icon: BarChart3 },
-    ],
-  },
-  {
-    title: 'Administration',
-    items: [
-      { id: 'users', name: 'Users & Roles', path: '/users', icon: Users },
-      { id: 'settings', name: 'Settings', path: '/settings', icon: Settings },
-      { id: 'billing', name: 'SaaS & Billing', path: '/billing', icon: CreditCard },
-    ],
-  },
-];
+const iconMap: Record<string, ElementType> = {
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  Boxes,
+  Truck,
+  Building2,
+  Users,
+  RotateCcw,
+  Receipt,
+  Wallet,
+  BarChart3,
+  Barcode,
+  ShieldCheck,
+  Settings,
+  Activity,
+  Bell,
+};
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -84,224 +51,132 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps): React.JSX.Element {
+  const { canAccessModule, currentUser } = useAuthStore();
   const { settings } = useSettingsStore();
-  const { user } = useAuthStore();
-  const storeName = user?.storeName || settings['store.name'] || 'MARTPOS';
+
+  const storeName = settings['store.name'] || APP_NAME;
+  const storeLogo = settings['store.logo'];
+
+  // Pre-filter sections — hide entire section if no items are accessible
+  const visibleSections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => canAccessModule(item.id)),
+  })).filter((section) => section.items.length > 0);
 
   return (
     <aside
-      style={{
-        width: isCollapsed ? '72px' : '260px',
-        backgroundColor: '#0d1218',
-        borderRight: '1px solid #1b2530',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'width 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-        flexShrink: 0,
-        zIndex: 20,
-        userSelect: 'none',
-      }}
+      className={`flex shrink-0 flex-col border-r border-slate-800 bg-slate-950 text-slate-300 transition-all duration-200 select-none ${
+        isCollapsed ? 'w-16' : 'w-64'
+      }`}
+      aria-label="Application Sidebar"
     >
-      {/* Brand header */}
-      <div
-        style={{
-          height: '60px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: isCollapsed ? 'center' : 'space-between',
-          padding: isCollapsed ? '0' : '0 1rem',
-          borderBottom: '1px solid #1b2530',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
-          <div
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #f7a83e, #f0932a)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#131921',
-              flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(240, 147, 42, 0.25)',
-            }}
-          >
-            <Crown size={20} strokeWidth={2.2} />
-          </div>
+      {/* Brand Header */}
+      <div className="flex h-14 items-center justify-between border-b border-slate-800 px-3.5">
+        <div className="flex items-center gap-3 overflow-hidden">
+          {storeLogo ? (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/95 p-1 shadow-md overflow-hidden">
+              <img src={storeLogo} alt={storeName} className="h-full w-full object-contain" />
+            </div>
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 shadow-md">
+              <Crown className="h-5 w-5 fill-slate-950 stroke-[1.75]" aria-hidden="true" />
+            </div>
+          )}
           {!isCollapsed && (
-            <div style={{ overflow: 'hidden' }}>
-              <div
-                style={{
-                  color: 'white',
-                  fontWeight: 900,
-                  fontSize: '0.9375rem',
-                  letterSpacing: '-0.02em',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black tracking-tight text-white uppercase">
                 {storeName}
-              </div>
-              <div
-                style={{
-                  color: '#f0932a',
-                  fontWeight: 600,
-                  fontSize: '0.6875rem',
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Cloud POS & Sync
-              </div>
+              </p>
+              <p className="truncate text-[10px] font-medium text-amber-400/90 tracking-wide">
+                Retail POS & Inventory
+              </p>
             </div>
           )}
         </div>
-
-        {!isCollapsed && (
-          <button
-            type="button"
-            onClick={onToggle}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#5f7085',
-              cursor: 'pointer',
-              padding: '0.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '0.375rem',
-            }}
-            title="Collapse sidebar"
-          >
-            <ChevronLeft size={18} />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 transition-colors"
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
       </div>
 
-      {/* Nav list */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '0.75rem 0.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-        }}
-      >
-        {NAV_SECTIONS.map((sec) => (
-          <div key={sec.title}>
+      {/* Navigation Sections with Hidden Visual Scrollbar */}
+      <nav className="flex-1 sidebar-scroll space-y-4 p-2.5" aria-label="Main navigation">
+        {visibleSections.map((section) => (
+          <div key={section.title} className="space-y-1">
             {!isCollapsed && (
-              <div
-                style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  color: '#5f7085',
-                  padding: '0.25rem 0.625rem',
-                  marginBottom: '0.25rem',
-                }}
-              >
-                {sec.title}
-              </div>
+              <p className="px-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {section.title}
+              </p>
             )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
-              {sec.items.map((item) => {
-                const Icon = item.icon;
+            {section.items.map((item) => {
+              const Icon = iconMap[item.iconName] ?? LayoutDashboard;
+
+              const navLink = (
+                <NavLink
+                  key={item.id}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `group flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-xs font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 ${
+                      isActive
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                    } ${isCollapsed ? 'justify-center px-0' : ''}`
+                  }
+                >
+                  <Icon
+                    className="h-4 w-4 shrink-0 transition-transform group-hover:scale-105"
+                    aria-hidden="true"
+                  />
+                  {!isCollapsed && <span className="truncate">{item.label}</span>}
+                </NavLink>
+              );
+
+              if (isCollapsed) {
                 return (
-                  <NavLink
-                    key={item.id}
-                    to={item.path}
-                    title={isCollapsed ? item.name : undefined}
-                    style={({ isActive }) => ({
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: isCollapsed ? '0.625rem 0' : '0.5rem 0.75rem',
-                      justifyContent: isCollapsed ? 'center' : 'flex-start',
-                      borderRadius: '0.5rem',
-                      color: isActive ? '#f0932a' : '#97a3b3',
-                      backgroundColor: isActive ? 'rgba(240, 147, 42, 0.12)' : 'transparent',
-                      textDecoration: 'none',
-                      fontSize: '0.875rem',
-                      fontWeight: isActive ? 600 : 500,
-                      transition: 'all 0.15s ease',
-                      borderLeft: isActive ? '3px solid #f0932a' : '3px solid transparent',
-                    })}
-                  >
-                    <Icon size={18} strokeWidth={1.8} />
-                    {!isCollapsed && <span>{item.name}</span>}
-                  </NavLink>
+                  <Tooltip key={item.id} content={item.label} side="right">
+                    {navLink}
+                  </Tooltip>
                 );
-              })}
-            </div>
+              }
+
+              return navLink;
+            })}
           </div>
         ))}
-      </div>
+      </nav>
 
-      {/* Trial / Cloud Status Footer */}
-      {!isCollapsed ? (
-        <div
-          style={{
-            margin: '0.75rem',
-            padding: '0.75rem',
-            borderRadius: '0.625rem',
-            background: 'linear-gradient(135deg, rgba(240, 147, 42, 0.15), rgba(27, 37, 48, 0.8))',
-            border: '1px solid rgba(240, 147, 42, 0.25)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#f7a83e', fontSize: '0.75rem', fontWeight: 700 }}>
-            <Sparkles size={14} />
-            <span>3-Day Pro Trial Active</span>
+      {/* Footer / System Status */}
+      <div className="border-t border-slate-800 p-3">
+        {/* Role badge */}
+        {currentUser && !isCollapsed && (
+          <div className="mb-2 flex items-center gap-2 rounded-lg bg-slate-900 px-2.5 py-1.5 border border-slate-800">
+            <div className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-semibold text-slate-200">
+                {currentUser.full_name}
+              </p>
+              <p className="text-[10px] text-slate-400 capitalize">
+                {currentUser.role.replace('_', ' ')}
+              </p>
+            </div>
           </div>
-          <p style={{ color: '#97a3b3', fontSize: '0.6875rem', margin: '0.25rem 0 0.5rem' }}>
-            Desktop & Web sync active. Buy plan to keep counters live.
-          </p>
-          <NavLink
-            to="/billing"
-            style={{
-              display: 'block',
-              textAlign: 'center',
-              padding: '0.375rem',
-              borderRadius: '0.375rem',
-              backgroundColor: '#f0932a',
-              color: '#131921',
-              fontWeight: 700,
-              fontSize: '0.75rem',
-              textDecoration: 'none',
-            }}
-          >
-            Upgrade Plan
-          </NavLink>
-        </div>
-      ) : (
-        <div style={{ padding: '0.75rem', display: 'flex', justifyContent: 'center' }}>
-          <button
-            type="button"
-            onClick={onToggle}
-            style={{
-              background: '#1b2530',
-              border: 'none',
-              color: '#97a3b3',
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-            title="Expand sidebar"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      )}
+        )}
+        {/* <div className={`flex items-center gap-2.5 ${isCollapsed ? 'justify-center' : ''}`}>
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-950/80 text-emerald-400 border border-emerald-800/50">
+            <WifiOff className="h-3.5 w-3.5" aria-hidden="true" />
+          </div>
+          {!isCollapsed && (
+            <div className="min-w-0 text-xs">
+              <p className="font-semibold text-slate-200"> </p>
+              <p className="text-[10px] text-slate-400">Local SQLite DB</p>
+            </div>
+          )}
+        </div> */}
+      </div>
     </aside>
   );
 }

@@ -1,213 +1,209 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import {
-  PanelLeft,
-  Clock,
-  LogOut,
-  User,
-  Wifi,
-  WifiOff,
-  Sparkles,
-} from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import type { AppInfo } from '@shared/types/app';
+import { NAV_SECTIONS, ALL_NAV_ITEMS } from '@shared/constants/app';
+import { User, PanelLeft, Clock, LogOut, ShieldCheck, ShieldAlert, Moon, Sun } from 'lucide-react';
+import { Tooltip } from '@renderer/components/ui/Tooltip';
+import { useAuthStore } from '@renderer/stores/authStore';
+import { useThemeStore } from '@renderer/stores/themeStore';
+import { NotificationCenter } from '@renderer/components/notifications/NotificationCenter';
+import { useLicensingStore } from '@renderer/stores/licensingStore';
+import { LogoutConfirmationModal } from '@renderer/components/ui/LogoutConfirmationModal';
 
 interface HeaderProps {
-  onToggleSidebar: () => void;
+  appInfo: AppInfo;
+  onToggleSidebar?: () => void;
 }
 
-export function Header({ onToggleSidebar }: HeaderProps): React.JSX.Element {
+export function Header({ appInfo, onToggleSidebar }: HeaderProps): React.JSX.Element {
   const location = useLocation();
-  const [time, setTime] = useState('');
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const { user, logout } = useAuthStore();
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const {
+    currentUser,
+    logout,
+    logoutWithConfirmation,
+    isLogoutModalOpen,
+    closeLogoutModal,
+    isLoading,
+  } = useAuthStore();
+  const { status: licenseStatus, openActivationModal } = useLicensingStore();
+  const { mode, setMode } = useThemeStore();
 
   useEffect(() => {
     const updateTime = (): void => {
       const now = new Date();
-      setTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      setCurrentTime(
+        now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      );
     };
+
     updateTime();
     const interval = setInterval(updateTime, 1000);
-
-    const handleOnline = (): void => setIsOnline(true);
-    const handleOffline = (): void => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
     return () => {
       clearInterval(interval);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
-  // Format title from path
-  const getPageTitle = (path: string): string => {
-    const segment = path.replace('/', '').split('/')[0];
-    if (!segment) return 'Dashboard';
-    return segment
-      .split('-')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
+  // Find active item and section for dynamic breadcrumb & title
+  const activeItem =
+    ALL_NAV_ITEMS.find((item) => item.path === location.pathname) ??
+    (location.pathname === '/' ? ALL_NAV_ITEMS[0] : null);
+
+  const activeSection = NAV_SECTIONS.find((sec) =>
+    sec.items.some((item) => item.path === location.pathname),
+  );
+
+  const toggleThemeMode = (): void => {
+    const nextMode = mode === 'dark' ? 'light' : 'dark';
+    void setMode(nextMode);
+  };
+
+  const handleLogout = async (): Promise<void> => {
+    await logout();
+    closeLogoutModal();
   };
 
   return (
-    <header
-      style={{
-        height: '60px',
-        backgroundColor: '#131921',
-        borderBottom: '1px solid #1b2530',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 1.25rem',
-        userSelect: 'none',
-        flexShrink: 0,
-      }}
-    >
-      {/* Left side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          style={{
-            background: '#1b2530',
-            border: 'none',
-            color: '#c3cad3',
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-          title="Toggle Navigation"
-        >
-          <PanelLeft size={18} />
-        </button>
+    <>
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-surface-border bg-white px-5 shadow-xs select-none dark:border-slate-800 dark:bg-slate-900">
+        {/* Left side: Sidebar toggle, Breadcrumb & Title */}
+        <div className="flex items-center gap-3">
+          {onToggleSidebar && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              aria-label="Toggle sidebar"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </button>
+          )}
 
-        <div>
-          <h2 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'white', margin: 0 }}>
-            {getPageTitle(location.pathname)}
-          </h2>
-        </div>
-      </div>
-
-      {/* Right side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        {/* Sync status */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.375rem',
-            padding: '0.25rem 0.625rem',
-            borderRadius: '999px',
-            backgroundColor: isOnline ? 'rgba(22, 163, 74, 0.15)' : 'rgba(220, 38, 38, 0.15)',
-            border: `1px solid ${isOnline ? 'rgba(22, 163, 74, 0.3)' : 'rgba(220, 38, 38, 0.3)'}`,
-            color: isOnline ? '#4ade80' : '#f87171',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-          }}
-        >
-          {isOnline ? <Wifi size={13} /> : <WifiOff size={13} />}
-          <span>{isOnline ? 'Cloud Synced' : 'Offline Mode'}</span>
-        </div>
-
-        {/* Upgrade / Plan CTA */}
-        <Link
-          to="/billing"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.375rem',
-            padding: '0.3125rem 0.75rem',
-            borderRadius: '0.375rem',
-            backgroundColor: '#f0932a',
-            color: '#131921',
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            textDecoration: 'none',
-            boxShadow: '0 2px 6px rgba(240, 147, 42, 0.25)',
-          }}
-        >
-          <Sparkles size={13} />
-          <span>SaaS Plans</span>
-        </Link>
-
-        {/* Clock */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.375rem',
-            color: '#97a3b3',
-            fontSize: '0.8125rem',
-            fontWeight: 500,
-          }}
-        >
-          <Clock size={15} />
-          <span>{time}</span>
-        </div>
-
-        {/* User Profile */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.625rem',
-            paddingLeft: '0.75rem',
-            borderLeft: '1px solid #1b2530',
-          }}
-        >
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              backgroundColor: '#1b2530',
-              border: '1px solid #3b4a5e',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#f0932a',
-            }}
-          >
-            <User size={16} />
+          <div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <span>{activeSection?.title ?? 'Application'}</span>
+              <span>/</span>
+              <span className="font-bold text-slate-900 dark:text-white">
+                {activeItem?.label ?? (location.pathname === '/' ? 'Dashboard' : 'Page Not Found')}
+              </span>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'white' }}>
-              {user?.fullName || user?.username || 'Admin User'}
-            </span>
-            <span style={{ fontSize: '0.6875rem', color: '#f7a83e' }}>
-              {user?.storeName ? `${user.storeName} • ${user.role}` : user?.role ?? 'Owner'}
-            </span>
+        </div>
+
+        {/* Right side: Live clock, theme toggle, notifications, license badge, user, version info */}
+        <div className="flex items-center gap-3">
+          {/* Live clock */}
+          <div className="hidden sm:flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-mono text-slate-600 border border-surface-border dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+            <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+            <span>{currentTime}</span>
           </div>
 
-          {/* Logout */}
-          <button
-            type="button"
-            onClick={() => void logout()}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#5f7085',
-              cursor: 'pointer',
-              padding: '0.375rem',
-              borderRadius: '0.375rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginLeft: '0.5rem',
-            }}
-            title="Log Out"
+          {/* Dark/Light mode fast toggle */}
+          <Tooltip
+            content={mode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            side="bottom"
           >
-            <LogOut size={16} />
-          </button>
+            <button
+              type="button"
+              onClick={toggleThemeMode}
+              aria-label="Toggle theme mode"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
+            >
+              {mode === 'dark' ? (
+                <Sun className="h-4 w-4 text-amber-400" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </button>
+          </Tooltip>
+
+          {/* License Indicator */}
+          <Tooltip
+            content={
+              licenseStatus?.status === 'VALID'
+                ? `Licensed: ${licenseStatus.customer_name ?? ''} (${licenseStatus.business_name ?? ''})`
+                : licenseStatus?.status === 'TRIAL'
+                  ? `Running in 3-Day Free Trial (${String(licenseStatus.days_remaining)} day(s) left) — Click to Activate`
+                  : 'Software Unlicensed / Trial Expired — Click to Activate'
+            }
+            side="bottom"
+          >
+            <button
+              type="button"
+              onClick={openActivationModal}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold border transition-colors ${
+                licenseStatus?.status === 'VALID'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60'
+                  : licenseStatus?.status === 'TRIAL'
+                    ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60 animate-pulse'
+                    : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60 animate-bounce'
+              }`}
+            >
+              {licenseStatus?.status === 'VALID' ? (
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <ShieldAlert className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              )}
+              <span className="hidden md:inline">
+                {licenseStatus?.status === 'VALID'
+                  ? 'Licensed'
+                  : licenseStatus?.status === 'TRIAL'
+                    ? `Trial: ${String(licenseStatus.days_remaining)}d left`
+                    : 'Activate'}
+              </span>
+            </button>
+          </Tooltip>
+
+          {/* In-app Notification Center */}
+          <NotificationCenter />
+
+          {/* User profile & role */}
+          <div className="flex items-center gap-2 border-l border-surface-border pl-3 dark:border-slate-800">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-700 border border-brand-200 dark:bg-brand-950/60 dark:text-brand-300 dark:border-brand-800/60 font-bold text-xs">
+              <User className="h-4 w-4" />
+            </div>
+            <div className="hidden md:block text-left text-xs">
+              <p className="font-semibold text-slate-900 dark:text-white leading-tight">
+                {currentUser?.full_name || 'Admin User'}
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize font-mono">
+                {currentUser?.role === 'store_manager'
+                  ? 'Store Manager'
+                  : currentUser?.role || 'Administrator'}
+              </p>
+            </div>
+          </div>
+
+          {/* Logout Button - Opens confirmation modal */}
+          <Tooltip content="Sign Out (Lock POS)" side="bottom">
+            <button
+              type="button"
+              onClick={() => {
+                void logoutWithConfirmation();
+              }}
+              aria-label="Logout"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-500 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </Tooltip>
+
+          {/* App Version */}
+          <div className="hidden lg:block text-right text-[10px] text-slate-400 border-l border-surface-border pl-3 dark:border-slate-800">
+            <p>v{appInfo.version}</p>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onClose={closeLogoutModal}
+        onConfirm={() => {
+          void handleLogout();
+        }}
+        isLoading={isLoading}
+      />
+    </>
   );
 }

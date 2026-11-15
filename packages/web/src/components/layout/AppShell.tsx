@@ -1,49 +1,72 @@
-import React, { useState } from 'react';
-import { Sidebar } from './Sidebar';
-import { Header } from './Header';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
+import type { AppInfo } from '@shared/types/app';
+import { Sidebar } from '@renderer/components/layout/Sidebar';
+import { Header } from '@renderer/components/layout/Header';
+import { ActivationModal } from '@renderer/features/licensing/ActivationModal';
+import { useAuthStore } from '@renderer/stores/authStore';
+import { useSettingsStore } from '@renderer/stores/settingsStore';
+import { showToast } from '@renderer/components/ui/Toast';
 
 interface AppShellProps {
-  children: React.ReactNode;
+  appInfo: AppInfo;
+  children: ReactNode;
 }
 
-export function AppShell({ children }: AppShellProps): React.JSX.Element {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+export function AppShell({ appInfo, children }: AppShellProps): React.JSX.Element {
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const { isAuthenticated, logout } = useAuthStore();
+  const { settings } = useSettingsStore();
+
+  const timeoutMinutes = Number(settings['security.session_timeout_minutes']) || 60;
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || timeoutMinutes <= 0) return;
+
+    const timeoutMs = timeoutMinutes * 60 * 1000;
+
+    const resetTimer = (): void => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      timerRef.current = setTimeout(() => {
+        showToast(
+          'warning',
+          `Session timed out after ${String(timeoutMinutes)} minutes of inactivity.`,
+        );
+        void logout();
+      }, timeoutMs);
+    };
+
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+    events.forEach((event) => {
+      window.addEventListener(event, resetTimer, { passive: true });
+    });
+
+    resetTimer();
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [isAuthenticated, timeoutMinutes, logout]);
+
+  const toggleSidebar = (): void => {
+    setIsCollapsed((prev) => !prev);
+  };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        height: '100vh',
-        width: '100vw',
-        overflow: 'hidden',
-        backgroundColor: '#0d1218',
-        color: '#f8f9fa',
-        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-      }}
-    >
-      <Sidebar isCollapsed={isCollapsed} onToggle={() => setIsCollapsed(!isCollapsed)} />
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          minWidth: 0,
-          overflow: 'hidden',
-          backgroundColor: '#131921',
-        }}
-      >
-        <Header onToggleSidebar={() => setIsCollapsed(!isCollapsed)} />
-        <main
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '1.5rem',
-            backgroundColor: '#0d1218',
-          }}
-        >
-          {children}
-        </main>
+    <div className="flex h-screen w-screen overflow-hidden bg-surface-muted text-slate-900 font-sans dark:bg-navy-900 dark:text-slate-100">
+      <Sidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <Header appInfo={appInfo} onToggleSidebar={toggleSidebar} />
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
+      <ActivationModal />
     </div>
   );
 }

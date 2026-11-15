@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* MARTPOS Web — Design System
    Amazon-inspired: Navy chrome + Orange primary
    Matches desktop app theme exactly

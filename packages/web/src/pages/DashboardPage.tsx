@@ -1,492 +1,518 @@
-import React, { useEffect, useState } from 'react';
-import { dashboardApi } from '@/lib/apiClient';
-import { getDashboardKpis } from '@/lib/supabaseData';
+import { useEffect, useState } from 'react';
+import { PageHeader } from '@renderer/components/ui/PageHeader';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@renderer/components/ui/Card';
+import { EmptyState } from '@renderer/components/ui/EmptyState';
+import { Button } from '@renderer/components/ui/Button';
+import { formatMoney } from '@shared/utils/money';
+import type {
+  DashboardKpis,
+  DashboardSalesTrendPoint,
+  DashboardTopProduct,
+  DashboardActivityItem,
+} from '@shared/types/dashboard';
 import {
   DollarSign,
   ShoppingCart,
-  Boxes,
   AlertTriangle,
+  Boxes,
   TrendingUp,
-  Package,
+  PackageX,
   Award,
+  Activity,
+  ChevronDown,
+  ChevronUp,
+  CreditCard,
+  Building2,
+  Users,
+  RotateCcw,
   Receipt,
-  Sparkles,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-
-interface KpiData {
-  todaySalesMinor: number;
-  todayTransactions: number;
-  lowStockCount: number;
-  totalProductsCount: number;
-  monthSalesMinor: number;
-  monthExpensesMinor: number;
-  netProfitMinor: number;
-}
 
 export function DashboardPage(): React.JSX.Element {
-  const [kpis, setKpis] = useState<KpiData>({
-    todaySalesMinor: 1450000, // PKR 14,500.00
-    todayTransactions: 28,
-    lowStockCount: 4,
-    totalProductsCount: 312,
-    monthSalesMinor: 48500000,
-    monthExpensesMinor: 12400000,
-    netProfitMinor: 36100000,
-  });
+  const [kpis, setKpis] = useState<DashboardKpis | null>(null);
+  const [salesTrend, setSalesTrend] = useState<DashboardSalesTrendPoint[]>([]);
+  const [topProducts, setTopProducts] = useState<DashboardTopProduct[]>([]);
+  const [recentActivity, setRecentActivity] = useState<DashboardActivityItem[]>([]);
+  const [isLoadingKpis, setIsLoadingKpis] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
-    async function loadData(): Promise<void> {
+    const loadDashboard = async (): Promise<void> => {
+      if (!window.martpos) return;
+      setIsLoadingKpis(true);
       try {
-        // 1. Direct Supabase Cloud check
-        const cloudKpis = await getDashboardKpis();
-        if (cloudKpis) {
-          setKpis((prev) => ({
-            ...prev,
-            todaySalesMinor: cloudKpis.todaySalesMinor,
-            todayTransactions: cloudKpis.todayTransactions,
-            lowStockCount: cloudKpis.lowStockCount,
-            totalProductsCount: cloudKpis.totalProductsCount,
-            monthSalesMinor: cloudKpis.monthSalesMinor,
-            netProfitMinor: Math.max(0, cloudKpis.monthSalesMinor - prev.monthExpensesMinor),
-          }));
-          return;
-        }
-
-        // 2. Fallback to API backend if running
-        const res = await dashboardApi.getKpis({ preset: 'this_month' });
-        if (res.success && res.data) {
-          setKpis((prev) => ({ ...prev, ...(res.data as unknown as Partial<KpiData>) }));
-        }
-      } catch {
-        // Fallback to sample data
+        const [kpisRes, trendRes, topProductsRes, activityRes] = await Promise.all([
+          window.martpos.dashboard.getKpis({ preset: 'this_month' }),
+          window.martpos.dashboard.getTrend({ preset: 'this_month' }),
+          window.martpos.dashboard.getTopProducts({ preset: 'this_month', limit: 5 }),
+          window.martpos.dashboard.getActivity(5),
+        ]);
+        if (kpisRes.success) setKpis(kpisRes.data);
+        if (trendRes.success) setSalesTrend(trendRes.data);
+        if (topProductsRes.success) setTopProducts(topProductsRes.data);
+        if (activityRes.success) setRecentActivity(activityRes.data);
+      } finally {
+        setIsLoadingKpis(false);
       }
-    }
-    void loadData();
+    };
+
+    void loadDashboard();
   }, []);
 
-  const formatPrice = (minor: number): string => {
-    return `PKR ${(minor / 100).toLocaleString('en-PK', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
-
   return (
-    <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* Header Banner */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #1b2530 0%, #131921 100%)',
-          borderRadius: '1rem',
-          border: '1px solid #3b4a5e',
-          padding: '1.5rem 2rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '1rem',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white', margin: 0 }}>
-              Live Operations Dashboard
-            </h1>
-            <span
-              style={{
-                fontSize: '0.6875rem',
-                fontWeight: 700,
-                padding: '0.2rem 0.5rem',
-                borderRadius: '999px',
-                background: 'rgba(34, 197, 94, 0.15)',
-                color: '#4ade80',
-                border: '1px solid rgba(34, 197, 94, 0.3)',
-              }}
-            >
-              Real-Time
-            </span>
-          </div>
-          <p style={{ color: '#97a3b3', fontSize: '0.875rem', margin: 0 }}>
-            Synchronized with desktop POS counters and cloud database.
-          </p>
-        </div>
+    <div className="mx-auto max-w-7xl space-y-6">
+      <PageHeader
+        title="Dashboard"
+        description="Real-time mart performance metrics and operational overview."
+      />
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <Link
-            to="/pos"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: '#f0932a',
-              color: '#131921',
-              padding: '0.625rem 1.25rem',
-              borderRadius: '0.5rem',
-              fontWeight: 700,
-              fontSize: '0.875rem',
-              textDecoration: 'none',
-              boxShadow: '0 4px 12px rgba(240, 147, 42, 0.3)',
-            }}
-          >
-            <ShoppingCart size={18} />
-            <span>Launch POS Terminal</span>
-          </Link>
-          <Link
-            to="/billing"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: '#1b2530',
-              border: '1px solid #3b4a5e',
-              color: '#f7a83e',
-              padding: '0.625rem 1.25rem',
-              borderRadius: '0.5rem',
-              fontWeight: 700,
-              fontSize: '0.875rem',
-              textDecoration: 'none',
-            }}
-          >
-            <Sparkles size={16} />
-            <span>SaaS Plans</span>
-          </Link>
-        </div>
+      {/* TOP 4 PRIMARY KPI CARDS */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* 1. Today's Sales */}
+        <Card className="border-l-4 border-l-brand-600">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Today&apos;s Sales
+              </span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400 shadow-xs">
+                <DollarSign className="h-5 w-5" aria-hidden="true" />
+              </div>
+            </div>
+            <div className="mt-3">
+              {isLoadingKpis ? (
+                <div className="h-8 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+              ) : kpis !== null ? (
+                <>
+                  <p className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                    {formatMoney(kpis.today_sales_revenue_minor)}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {String(kpis.today_sales_invoice_count)} completed invoice(s) today
+                  </p>
+                </>
+              ) : (
+                <p className="text-2xl font-bold tracking-tight text-slate-400 italic">
+                  No data yet
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 2. Today's Transactions / Monthly Volume */}
+        <Card className="border-l-4 border-l-indigo-600">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                This Month&apos;s Volume
+              </span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 shadow-xs">
+                <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+              </div>
+            </div>
+            <div className="mt-3">
+              {isLoadingKpis ? (
+                <div className="h-8 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+              ) : kpis !== null ? (
+                <>
+                  <p className="text-2xl font-black tracking-tight text-indigo-600 dark:text-indigo-400">
+                    {formatMoney(kpis.sales_revenue_minor)}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {String(kpis.sales_invoice_count)} total invoice(s) this month
+                  </p>
+                </>
+              ) : (
+                <p className="text-2xl font-bold tracking-tight text-slate-400 italic">
+                  No data yet
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 3. Inventory Value */}
+        <Card className="border-l-4 border-l-emerald-600">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Inventory Value
+              </span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 shadow-xs">
+                <Boxes className="h-5 w-5" aria-hidden="true" />
+              </div>
+            </div>
+            <div className="mt-3">
+              {isLoadingKpis ? (
+                <div className="h-8 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+              ) : kpis !== null ? (
+                <>
+                  <p className="text-2xl font-black tracking-tight text-emerald-700 dark:text-emerald-400">
+                    {formatMoney(kpis.inventory_value_minor)}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {String(kpis.active_product_count)} active catalog item(s)
+                  </p>
+                </>
+              ) : (
+                <p className="text-2xl font-bold tracking-tight text-slate-400 italic">—</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 4. Low Stock / Out of Stock Alerts */}
+        <Card
+          className={`border-l-4 ${kpis && kpis.low_stock_count > 0 ? 'border-l-amber-500' : 'border-l-slate-400'}`}
+        >
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Stock Alerts
+              </span>
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-xs ${
+                  kpis && kpis.low_stock_count > 0
+                    ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400'
+                    : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                }`}
+              >
+                <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+              </div>
+            </div>
+            <div className="mt-3">
+              {isLoadingKpis ? (
+                <div className="h-8 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+              ) : kpis !== null ? (
+                <>
+                  <div className="flex items-baseline gap-2">
+                    <p
+                      className={`text-2xl font-black tracking-tight ${kpis.low_stock_count > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-800 dark:text-slate-200'}`}
+                    >
+                      {String(kpis.low_stock_count)}
+                    </p>
+                    <span className="text-xs font-semibold text-slate-400">low stock</span>
+                  </div>
+                  <p className="mt-1 text-xs font-medium text-rose-500 dark:text-rose-400">
+                    {String(kpis.out_of_stock_count)} out of stock item(s)
+                  </p>
+                </>
+              ) : (
+                <p className="text-2xl font-bold tracking-tight text-slate-400 italic">—</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Top 4 KPI Cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '1rem',
-        }}
-      >
-        {/* Today's Sales */}
-        <div
-          style={{
-            background: '#131921',
-            borderRadius: '0.75rem',
-            border: '1px solid #1b2530',
-            borderLeft: '4px solid #f0932a',
-            padding: '1.25rem',
+      {/* VIEW MORE TOGGLE BUTTON */}
+      <div className="flex items-center justify-center pt-1 pb-1">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setIsExpanded(!isExpanded);
           }}
+          className="border-brand-200 bg-white hover:bg-brand-50/50 text-brand-700 dark:bg-slate-900 dark:border-slate-800 dark:text-brand-400 dark:hover:bg-slate-800/80 shadow-xs gap-2 px-4 py-2"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#97a3b3' }}>
-              Today's Revenue
-            </span>
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(240, 147, 42, 0.15)',
-                color: '#f0932a',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <DollarSign size={20} />
-            </div>
-          </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white', marginTop: '0.75rem' }}>
-            {formatPrice(kpis.todaySalesMinor)}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#4ade80', fontSize: '0.75rem', marginTop: '0.375rem' }}>
-            <TrendingUp size={13} />
-            <span>+14.2% from yesterday</span>
-          </div>
-        </div>
+          <span>{isExpanded ? 'Hide Additional Metrics' : 'View More Operational Metrics'}</span>
+          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
+      </div>
 
-        {/* Transactions */}
-        <div
-          style={{
-            background: '#131921',
-            borderRadius: '0.75rem',
-            border: '1px solid #1b2530',
-            borderLeft: '4px solid #38bdf8',
-            padding: '1.25rem',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#97a3b3' }}>
-              Today's Orders
-            </span>
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                color: '#38bdf8',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <ShoppingCart size={20} />
-            </div>
-          </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white', marginTop: '0.75rem' }}>
-            {kpis.todayTransactions} receipts
-          </div>
-          <div style={{ color: '#97a3b3', fontSize: '0.75rem', marginTop: '0.375rem' }}>
-            Average basket: PKR 518.00
+      {/* EXPANDABLE SECONDARY KPI SECTION */}
+      {isExpanded && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-top-3 duration-200">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Purchases This Month */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Purchases This Month
+                  </span>
+                  <Receipt className="h-4 w-4 text-slate-400" />
+                </div>
+                <p className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+                  {kpis ? formatMoney(kpis.purchases_amount_minor) : '—'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {kpis
+                    ? `${String(kpis.purchases_invoice_count)} purchase invoice(s)`
+                    : 'Loading...'}
+                </p>
+                {kpis && (
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Today: {formatMoney(kpis.today_purchases_amount_minor)} (
+                    {String(kpis.today_purchases_invoice_count)})
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Gross Profit */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Gross Profit (Sales Less Cost)
+                  </span>
+                  <TrendingUp className="h-4 w-4 text-emerald-500" />
+                </div>
+                <p className="mt-2 text-2xl font-black text-emerald-700 dark:text-emerald-400">
+                  {kpis ? formatMoney(kpis.gross_profit_minor) : '—'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Calculated from sale-time cost records
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Operating Expenses */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Expenses This Month
+                  </span>
+                  <CreditCard className="h-4 w-4 text-rose-500" />
+                </div>
+                <p className="mt-2 text-2xl font-black text-rose-700 dark:text-rose-400">
+                  {kpis ? formatMoney(kpis.expenses_minor) : '—'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Posted operating expenses
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Customer Receivables (Khata) */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Customer Receivables
+                  </span>
+                  <Users className="h-4 w-4 text-amber-500" />
+                </div>
+                <p className="mt-2 text-2xl font-black text-amber-700 dark:text-amber-400">
+                  {kpis ? formatMoney(kpis.customer_receivables_minor) : '—'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {kpis
+                    ? `${String(kpis.active_customer_count)} active customer account(s)`
+                    : 'Loading...'}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Supplier Payables */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Supplier Payables
+                  </span>
+                  <Building2 className="h-4 w-4 text-orange-500" />
+                </div>
+                <p className="mt-2 text-2xl font-black text-orange-700 dark:text-orange-400">
+                  {kpis ? formatMoney(kpis.supplier_payables_minor) : '—'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {kpis
+                    ? `${String(kpis.active_supplier_count)} active supplier account(s)`
+                    : 'Loading...'}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Returns This Month */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Returns This Month
+                  </span>
+                  <RotateCcw className="h-4 w-4 text-rose-500" />
+                </div>
+                <p className="mt-2 text-2xl font-black text-rose-700 dark:text-rose-400">
+                  {kpis ? formatMoney(kpis.returns_amount_minor) : '—'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {kpis ? `${String(kpis.returns_count)} processed return(s)` : 'Loading...'}
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
+      )}
+
+      {/* DASHBOARD ACTIVITY & PERFORMANCE WIDGETS */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Sales Overview Trend */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+              <div>
+                <CardTitle>Sales Trend</CardTitle>
+                <CardDescription>
+                  Daily revenue trends and completed transaction density
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {salesTrend.length > 0 ? (
+              <div className="space-y-2">
+                {salesTrend.slice(-7).map((point) => (
+                  <div
+                    key={point.date}
+                    className="flex items-center justify-between rounded-xl border border-surface-border bg-slate-50/70 p-3 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-200"
+                  >
+                    <span className="font-semibold">{point.date}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        {formatMoney(point.sales_revenue_minor)}
+                      </span>
+                      <span className="text-slate-400 font-mono">({point.invoice_count} inv)</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={TrendingUp}
+                title="No Sales Recorded"
+                description="Daily sales records will appear here once POS billing transactions are completed."
+              />
+            )}
+          </CardContent>
+        </Card>
 
         {/* Low Stock Alerts */}
-        <div
-          style={{
-            background: '#131921',
-            borderRadius: '0.75rem',
-            border: '1px solid #1b2530',
-            borderLeft: '4px solid #f87171',
-            padding: '1.25rem',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#97a3b3' }}>
-              Low Stock Alert
-            </span>
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                color: '#f87171',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <AlertTriangle size={20} />
-            </div>
-          </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f87171', marginTop: '0.75rem' }}>
-            {kpis.lowStockCount} items
-          </div>
-          <Link
-            to="/inventory"
-            style={{ color: '#f87171', fontSize: '0.75rem', marginTop: '0.375rem', display: 'block', textDecoration: 'none' }}
-          >
-            Review & restock now →
-          </Link>
-        </div>
-
-        {/* Total Catalog */}
-        <div
-          style={{
-            background: '#131921',
-            borderRadius: '0.75rem',
-            border: '1px solid #1b2530',
-            borderLeft: '4px solid #a855f7',
-            padding: '1.25rem',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#97a3b3' }}>
-              Active Catalog
-            </span>
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(168, 85, 247, 0.15)',
-                color: '#a855f7',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Boxes size={20} />
-            </div>
-          </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'white', marginTop: '0.75rem' }}>
-            {kpis.totalProductsCount} SKUs
-          </div>
-          <div style={{ color: '#97a3b3', fontSize: '0.75rem', marginTop: '0.375rem' }}>
-            All barcodes mapped & active
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Launchpad & Modules Overview */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '1.5rem',
-        }}
-      >
-        {/* Quick Launch Operations */}
-        <div
-          style={{
-            background: '#131921',
-            borderRadius: '0.75rem',
-            border: '1px solid #1b2530',
-            padding: '1.5rem',
-          }}
-        >
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'white', margin: '0 0 1rem 0' }}>
-            Quick Operations
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-            <Link
-              to="/pos"
-              style={{
-                padding: '1rem',
-                borderRadius: '0.5rem',
-                background: '#1b2530',
-                border: '1px solid #3b4a5e',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                textDecoration: 'none',
-                color: 'white',
-              }}
-            >
-              <ShoppingCart size={20} style={{ color: '#f0932a' }} />
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <PackageX className="h-4 w-4 text-amber-500" />
               <div>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>POS Terminal</div>
-                <div style={{ fontSize: '0.6875rem', color: '#97a3b3' }}>Scan & checkout</div>
+                <CardTitle>Low Stock Alerts</CardTitle>
+                <CardDescription>Products at or below reorder threshold</CardDescription>
               </div>
-            </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {kpis && kpis.low_stock_items && kpis.low_stock_items.length > 0 ? (
+              <div className="space-y-2">
+                {kpis.low_stock_items.slice(0, 5).map((item) => (
+                  <div
+                    key={`${item.product_name}-${item.variant_name}`}
+                    className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200"
+                  >
+                    <span className="font-semibold truncate max-w-[220px]">
+                      {item.product_name} · {item.variant_name}
+                    </span>
+                    <span className="font-bold rounded-md bg-amber-200/60 dark:bg-amber-900/60 px-2 py-0.5">
+                      {item.current_stock} left
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={AlertTriangle}
+                title="No Low Stock Warnings"
+                description="Products requiring replenishment will be flagged here according to minimum stock thresholds."
+              />
+            )}
+          </CardContent>
+        </Card>
 
-            <Link
-              to="/products"
-              style={{
-                padding: '1rem',
-                borderRadius: '0.5rem',
-                background: '#1b2530',
-                border: '1px solid #3b4a5e',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                textDecoration: 'none',
-                color: 'white',
-              }}
-            >
-              <Package size={20} style={{ color: '#38bdf8' }} />
+        {/* Top Selling Products */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Award className="h-4 w-4 text-brand-600 dark:text-brand-400" />
               <div>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>Add Product</div>
-                <div style={{ fontSize: '0.6875rem', color: '#97a3b3' }}>Pricing & variants</div>
+                <CardTitle>Top Selling Products</CardTitle>
+                <CardDescription>Highest revenue items this month</CardDescription>
               </div>
-            </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {topProducts.length > 0 ? (
+              <div className="space-y-2">
+                {topProducts.map((product, index) => (
+                  <div
+                    key={`${product.product_name}-${product.variant_name}`}
+                    className="flex items-center justify-between rounded-xl border border-surface-border bg-slate-50/70 p-3 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-200"
+                  >
+                    <span className="font-semibold truncate max-w-[220px]">
+                      {String(index + 1)}. {product.product_name} · {product.variant_name}
+                    </span>
+                    <span className="font-bold text-slate-900 dark:text-white">
+                      {formatMoney(product.revenue_minor)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Award}
+                title="No Product Performance Data"
+                description="Best-selling products ranking will automatically calculate from completed receipt item sales."
+              />
+            )}
+          </CardContent>
+        </Card>
 
-            <Link
-              to="/barcode-labels"
-              style={{
-                padding: '1rem',
-                borderRadius: '0.5rem',
-                background: '#1b2530',
-                border: '1px solid #3b4a5e',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                textDecoration: 'none',
-                color: 'white',
-              }}
-            >
-              <Award size={20} style={{ color: '#4ade80' }} />
+        {/* Recent Activity Audit Stream */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-indigo-500" />
               <div>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>Barcode Stickers</div>
-                <div style={{ fontSize: '0.6875rem', color: '#97a3b3' }}>Print label rolls</div>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Stream of sales, adjustments, and shift events</CardDescription>
               </div>
-            </Link>
-
-            <Link
-              to="/cash"
-              style={{
-                padding: '1rem',
-                borderRadius: '0.5rem',
-                background: '#1b2530',
-                border: '1px solid #3b4a5e',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                textDecoration: 'none',
-                color: 'white',
-              }}
-            >
-              <Receipt size={20} style={{ color: '#a855f7' }} />
-              <div>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>Shift & Cash</div>
-                <div style={{ fontSize: '0.6875rem', color: '#97a3b3' }}>Open/close drawer</div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {recentActivity.length > 0 ? (
+              <div className="space-y-2">
+                {recentActivity.map((item) => (
+                  <div
+                    key={`${item.type}-${item.id}`}
+                    className="flex items-center justify-between rounded-xl border border-surface-border bg-slate-50/70 p-3 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-200"
+                  >
+                    <span className="font-semibold capitalize truncate max-w-[220px]">
+                      {item.type}: {item.label}
+                    </span>
+                    <span className="font-mono text-slate-500 dark:text-slate-400">
+                      {item.amount_minor === undefined
+                        ? new Date(item.created_at).toLocaleDateString()
+                        : formatMoney(item.amount_minor)}
+                    </span>
+                  </div>
+                ))}
               </div>
-            </Link>
-          </div>
-        </div>
-
-        {/* Cloud Sync & SaaS Status Card */}
-        <div
-          style={{
-            background: '#131921',
-            borderRadius: '0.75rem',
-            border: '1px solid #1b2530',
-            padding: '1.5rem',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'white', margin: 0 }}>
-              Cloud & Sync Health
-            </h3>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                padding: '0.2rem 0.5rem',
-                borderRadius: '999px',
-                background: 'rgba(240, 147, 42, 0.15)',
-                color: '#f7a83e',
-                fontWeight: 600,
-              }}
-            >
-              Cursor-Style Auth
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem' }}>
-              <span style={{ color: '#97a3b3' }}>Sync Engine</span>
-              <span style={{ color: '#4ade80', fontWeight: 600 }}>Supabase Online (PostgreSQL)</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem' }}>
-              <span style={{ color: '#97a3b3' }}>Offline Mode</span>
-              <span style={{ color: 'white', fontWeight: 600 }}>IndexedDB / LocalStorage</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem' }}>
-              <span style={{ color: '#97a3b3' }}>Active License</span>
-              <span style={{ color: '#f7a83e', fontWeight: 600 }}>3-Day Pro Trial Active</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem' }}>
-              <span style={{ color: '#97a3b3' }}>Active Counters</span>
-              <span style={{ color: 'white', fontWeight: 600 }}>2 Connected (1 Desktop, 1 Web)</span>
-            </div>
-          </div>
-
-          <Link
-            to="/billing"
-            style={{
-              display: 'block',
-              marginTop: '1.25rem',
-              textAlign: 'center',
-              padding: '0.625rem',
-              borderRadius: '0.5rem',
-              backgroundColor: '#1b2530',
-              border: '1px solid #3b4a5e',
-              color: 'white',
-              fontSize: '0.8125rem',
-              fontWeight: 600,
-              textDecoration: 'none',
-            }}
-          >
-            Manage Subscription & Counters →
-          </Link>
-        </div>
+            ) : (
+              <EmptyState
+                icon={Activity}
+                title="No Recent Activity"
+                description="Sales and purchase activity will appear here as transactions occur."
+              />
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
