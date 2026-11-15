@@ -2,8 +2,7 @@ node_modules/
 out/
 release/
 dist/
-packages/*/node_modules/
-packages/*/dist/
+dist-gateway/
 *.log
 .DS_Store
 Thumbs.db

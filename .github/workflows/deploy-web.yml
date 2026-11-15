@@ -1,4 +1,4 @@
-name: Deploy MARTPOS Web to GitHub Pages
+name: Deploy Zenthropic Multi-Product Gateway to GitHub Pages
 
 on:
   push:
@@ -30,19 +30,22 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install Monorepo Root dependencies
         run: npm ci
 
-      - name: Install web package dependencies
+      - name: Install MartPOS Web dependencies
         working-directory: packages/web
         run: npm ci
 
-      - name: Build Web Application
-        working-directory: packages/web
+      - name: Install WarehouseOS Web dependencies
+        working-directory: packages/warehouse-web
+        run: npm ci
+
+      - name: Build All Products & Gateway (PRD + UAT)
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://mydhyrxkhoqodprnxijv.supabase.co' }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGh5cnhraG9xb2Rwcm54aWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMDY1ODgsImV4cCI6MjEwNjY4MjU4OH0.Oq_a5hscbVqnY2wEug5sZGCBluRTeh2A7WZLj0ixFOM' }}
-        run: npm run build
+        run: node scripts/build-portal-gateway.mjs
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -50,7 +53,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'packages/web/dist'
+          path: 'dist-gateway'
 
       - name: Deploy to GitHub Pages
         id: deployment

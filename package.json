@@ -34,6 +34,7 @@
     "test:discount-returns": "npx tsx --tsconfig tsconfig.node.json scripts/test-bill-discount-returns.ts",
     "test:all": "npx tsx --tsconfig tsconfig.node.json scripts/test-phase2-returns-exchanges.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase3-inventory-purchases-audit.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase5.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase6.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase7.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase8.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase9.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-phase10.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-e2e-workflow.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-licensing.ts && npx tsx --tsconfig tsconfig.node.json scripts/test-bill-discount-returns.ts",
     "package-win": "npm run build && electron-builder --win",
+    "build:gateway": "node scripts/build-portal-gateway.mjs",
     "build:web:uat": "npm --prefix packages/web run build:uat",
     "build:web:prd": "npm --prefix packages/web run build:prd",
     "build:warehouse:uat": "npm --prefix packages/warehouse-web run build:uat",
