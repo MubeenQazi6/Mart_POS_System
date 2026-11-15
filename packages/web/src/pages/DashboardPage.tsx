@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { dashboardApi } from '@/lib/apiClient';
+import { getDashboardKpis } from '@/lib/supabaseData';
 import {
   DollarSign,
   ShoppingCart,
@@ -37,6 +38,22 @@ export function DashboardPage(): React.JSX.Element {
   useEffect(() => {
     async function loadData(): Promise<void> {
       try {
+        // 1. Direct Supabase Cloud check
+        const cloudKpis = await getDashboardKpis();
+        if (cloudKpis) {
+          setKpis((prev) => ({
+            ...prev,
+            todaySalesMinor: cloudKpis.todaySalesMinor,
+            todayTransactions: cloudKpis.todayTransactions,
+            lowStockCount: cloudKpis.lowStockCount,
+            totalProductsCount: cloudKpis.totalProductsCount,
+            monthSalesMinor: cloudKpis.monthSalesMinor,
+            netProfitMinor: Math.max(0, cloudKpis.monthSalesMinor - prev.monthExpensesMinor),
+          }));
+          return;
+        }
+
+        // 2. Fallback to API backend if running
         const res = await dashboardApi.getKpis({ preset: 'this_month' });
         if (res.success && res.data) {
           setKpis((prev) => ({ ...prev, ...(res.data as unknown as Partial<KpiData>) }));

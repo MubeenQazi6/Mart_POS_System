@@ -1,4 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  createSale,
+  getUserOrgId,
+  listProducts,
+  createProduct,
+  searchProducts,
+} from '@/lib/supabaseData';
 import {
   Plus,
   Search,
@@ -40,15 +47,29 @@ export function PosPage(): React.JSX.Element {
   const taxMinor = Math.round(subtotalMinor * 0.05); // 5% GST
   const grandTotalMinor = subtotalMinor + taxMinor;
 
-  const handleAddItem = (e: React.FormEvent): void => {
+  const handleAddItem = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    if (!barcodeInput.trim()) return;
+    const query = barcodeInput.trim();
+    if (!query) return;
+
+    let foundName = `Scanned Item (${query.slice(-4) || 'SKU'})`;
+    let foundPrice = 35000;
+
+    try {
+      const results = await searchProducts(query);
+      if (results.length > 0) {
+        foundName = results[0].name;
+        foundPrice = results[0].selling_price_minor;
+      }
+    } catch {
+      // Fallback to default scanned price
+    }
 
     const newItem: CartItem = {
       id: Date.now(),
-      name: `Scanned Item (${barcodeInput.slice(-4) || 'SKU'})`,
-      barcode: barcodeInput,
-      priceMinor: 35000,
+      name: foundName,
+      barcode: query,
+      priceMinor: foundPrice,
       qty: 1,
     };
     setCart((prev) => [...prev, newItem]);
@@ -73,9 +94,29 @@ export function PosPage(): React.JSX.Element {
     setCart((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  const handleCompleteSale = (): void => {
+  const handleCompleteSale = async (): Promise<void> => {
     if (cart.length === 0) return;
     setPaymentDone(true);
+
+    try {
+      const orgId = await getUserOrgId();
+      if (orgId) {
+        const invNum = `INV-${Math.floor(100000 + Math.random() * 900000)}`;
+        await createSale({
+          org_id: orgId,
+          counter_id: null,
+          invoice_number: invNum,
+          subtotal_minor: subtotalMinor,
+          tax_minor: taxMinor,
+          discount_minor: 0,
+          grand_total_minor: grandTotalMinor,
+          tender_type: 'CASH',
+        });
+      }
+    } catch (err) {
+      console.warn('Could not sync sale to Supabase:', err);
+    }
+
     setTimeout(() => {
       setCart([]);
       setPaymentDone(false);
@@ -327,13 +368,99 @@ export function PosPage(): React.JSX.Element {
 /* ─── 2. PRODUCTS & CATALOG PAGE ────────────────────────────────────── */
 export function ProductsPage(): React.JSX.Element {
   const [searchTerm, setSearchTerm] = useState('');
-  const [products] = useState([
+  const [products, setProducts] = useState([
     { id: 1, name: 'Olpers Milk 1L', sku: 'OLP-1L', barcode: '8964000123456', category: 'Dairy', price: '280.00', cost: '250.00', stock: 45 },
     { id: 2, name: 'Supreme Basmati Rice 5kg', sku: 'RCE-5KG', barcode: '8964000789012', category: 'Grains', price: '1450.00', cost: '1250.00', stock: 12 },
     { id: 3, name: 'Tapal Danedar Tea 450g', sku: 'TEA-450', barcode: '8964000345678', category: 'Beverages', price: '680.00', cost: '590.00', stock: 3 },
     { id: 4, name: 'Shan Biryani Masala 50g', sku: 'SHN-BIR', barcode: '8964000901234', category: 'Spices', price: '120.00', cost: '95.00', stock: 80 },
     { id: 5, name: 'Nestle Pure Life 1.5L', sku: 'WTR-1.5L', barcode: '8964000567890', category: 'Beverages', price: '90.00', cost: '70.00', stock: 65 },
   ]);
+
+  const [showModal, setShowModal] = useState(false);
+  const [name, setName] = useState('');
+  const [barcode, setBarcode] = useState('');
+  const [category, setCategory] = useState('Dairy');
+  const [cost, setCost] = useState('');
+  const [price, setPrice] = useState('');
+  const [stock, setStock] = useState('50');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    async function fetchProducts(): Promise<void> {
+      try {
+        const cloudProds = await listProducts();
+        if (cloudProds && cloudProds.length > 0) {
+          setProducts(
+            cloudProds.map((cp, idx) => ({
+              id: idx + 1,
+              name: cp.name,
+              sku: cp.barcode.slice(-6) || 'SKU',
+              barcode: cp.barcode,
+              category: cp.category || 'General',
+              price: (cp.selling_price_minor / 100).toFixed(2),
+              cost: (cp.cost_price_minor / 100).toFixed(2),
+              stock: cp.stock_quantity,
+            })),
+          );
+        }
+      } catch {
+        // Fallback to sample data
+      }
+    }
+    void fetchProducts();
+  }, []);
+
+  const handleSaveProduct = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    if (!name.trim() || !price) return;
+    setIsSaving(true);
+
+    try {
+      const orgId = await getUserOrgId();
+      const code = barcode.trim() || `8964${Math.floor(100000000 + Math.random() * 900000000)}`;
+      const costMinor = Math.round(parseFloat(cost || '0') * 100);
+      const priceMinor = Math.round(parseFloat(price) * 100);
+      const stockQty = parseInt(stock || '0', 10);
+
+      if (orgId) {
+        await createProduct({
+          org_id: orgId,
+          name: name.trim(),
+          barcode: code,
+          category,
+          cost_price_minor: costMinor,
+          selling_price_minor: priceMinor,
+          stock_quantity: stockQty,
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      setProducts((prev) => [
+        {
+          id: Date.now(),
+          name: name.trim(),
+          sku: code.slice(-6),
+          barcode: code,
+          category,
+          price: parseFloat(price).toFixed(2),
+          cost: parseFloat(cost || '0').toFixed(2),
+          stock: stockQty,
+        },
+        ...prev,
+      ]);
+
+      setShowModal(false);
+      setName('');
+      setBarcode('');
+      setCost('');
+      setPrice('');
+    } catch (err) {
+      console.warn('Failed to add product to cloud:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const filtered = products.filter(
     (p) =>
@@ -351,6 +478,7 @@ export function ProductsPage(): React.JSX.Element {
         </div>
         <button
           type="button"
+          onClick={() => setShowModal(true)}
           style={{
             padding: '0.625rem 1.25rem',
             backgroundColor: '#f0932a',
@@ -435,18 +563,261 @@ export function ProductsPage(): React.JSX.Element {
           </tbody>
         </table>
       </div>
+
+      {/* New Product Modal */}
+      {showModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#131921',
+              border: '1px solid #3b4a5e',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              width: '100%',
+              maxWidth: '480px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white', margin: 0 }}>Add New Product</h2>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                style={{ background: 'none', border: 'none', color: '#97a3b3', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProduct} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#97a3b3', marginBottom: '0.25rem' }}>
+                  Product Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Shan Chaat Masala 100g"
+                  style={{
+                    width: '100%',
+                    padding: '0.625rem',
+                    background: '#0d1218',
+                    border: '1px solid #3b4a5e',
+                    borderRadius: '0.375rem',
+                    color: 'white',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#97a3b3', marginBottom: '0.25rem' }}>
+                    Barcode (EAN-13)
+                  </label>
+                  <input
+                    type="text"
+                    value={barcode}
+                    onChange={(e) => setBarcode(e.target.value)}
+                    placeholder="Auto-generated if empty"
+                    style={{
+                      width: '100%',
+                      padding: '0.625rem',
+                      background: '#0d1218',
+                      border: '1px solid #3b4a5e',
+                      borderRadius: '0.375rem',
+                      color: 'white',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#97a3b3', marginBottom: '0.25rem' }}>
+                    Category
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.625rem',
+                      background: '#0d1218',
+                      border: '1px solid #3b4a5e',
+                      borderRadius: '0.375rem',
+                      color: 'white',
+                      outline: 'none',
+                    }}
+                  >
+                    <option value="Dairy">Dairy</option>
+                    <option value="Beverages">Beverages</option>
+                    <option value="Grains">Grains</option>
+                    <option value="Spices">Spices</option>
+                    <option value="Snacks">Snacks</option>
+                    <option value="General">General</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#97a3b3', marginBottom: '0.25rem' }}>
+                    Cost (PKR)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={cost}
+                    onChange={(e) => setCost(e.target.value)}
+                    placeholder="250.00"
+                    style={{
+                      width: '100%',
+                      padding: '0.625rem',
+                      background: '#0d1218',
+                      border: '1px solid #3b4a5e',
+                      borderRadius: '0.375rem',
+                      color: 'white',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#97a3b3', marginBottom: '0.25rem' }}>
+                    Selling (PKR) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="290.00"
+                    style={{
+                      width: '100%',
+                      padding: '0.625rem',
+                      background: '#0d1218',
+                      border: '1px solid #3b4a5e',
+                      borderRadius: '0.375rem',
+                      color: 'white',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#97a3b3', marginBottom: '0.25rem' }}>
+                    Opening Stock
+                  </label>
+                  <input
+                    type="number"
+                    value={stock}
+                    onChange={(e) => setStock(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.625rem',
+                      background: '#0d1218',
+                      border: '1px solid #3b4a5e',
+                      borderRadius: '0.375rem',
+                      color: 'white',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    padding: '0.625rem 1rem',
+                    background: '#1b2530',
+                    border: '1px solid #3b4a5e',
+                    borderRadius: '0.375rem',
+                    color: '#97a3b3',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  style={{
+                    padding: '0.625rem 1.25rem',
+                    backgroundColor: '#f0932a',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    color: '#131921',
+                    fontWeight: 700,
+                    cursor: isSaving ? 'wait' : 'pointer',
+                  }}
+                >
+                  {isSaving ? 'Saving to Cloud...' : 'Save Product'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ─── 3. INVENTORY & STOCK LEVELS ───────────────────────────────────── */
 export function InventoryPage(): React.JSX.Element {
-  const [stockItems] = useState([
+  const [stockItems, setStockItems] = useState([
     { id: 1, name: 'Olpers Milk 1L', sku: 'OLP-1L', currentStock: 45, minStock: 20, value: 'PKR 11,250' },
     { id: 2, name: 'Supreme Basmati Rice 5kg', sku: 'RCE-5KG', currentStock: 12, minStock: 10, value: 'PKR 15,000' },
     { id: 3, name: 'Tapal Danedar Tea 450g', sku: 'TEA-450', currentStock: 3, minStock: 15, value: 'PKR 1,770' },
     { id: 4, name: 'Shan Biryani Masala 50g', sku: 'SHN-BIR', currentStock: 80, minStock: 25, value: 'PKR 7,600' },
   ]);
+
+  const [totalVal, setTotalVal] = useState('PKR 1,485,200');
+  const [lowCount, setLowCount] = useState(4);
+
+  useEffect(() => {
+    async function loadStock(): Promise<void> {
+      try {
+        const cloudProds = await listProducts();
+        if (cloudProds && cloudProds.length > 0) {
+          let sumMinor = 0;
+          let low = 0;
+          const mapped = cloudProds.map((cp, idx) => {
+            const itemVal = cp.stock_quantity * cp.cost_price_minor;
+            sumMinor += itemVal;
+            if (cp.stock_quantity <= 10) low++;
+            return {
+              id: idx + 1,
+              name: cp.name,
+              sku: cp.barcode.slice(-6) || 'SKU',
+              currentStock: cp.stock_quantity,
+              minStock: 10,
+              value: `PKR ${(itemVal / 100).toLocaleString('en-PK', { minimumFractionDigits: 2 })}`,
+            };
+          });
+          setStockItems(mapped);
+          setTotalVal(`PKR ${(sumMinor / 100).toLocaleString('en-PK', { minimumFractionDigits: 2 })}`);
+          setLowCount(low);
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    void loadStock();
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -474,11 +845,11 @@ export function InventoryPage(): React.JSX.Element {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
         <div style={{ background: '#131921', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid #1b2530', borderLeft: '4px solid #4ade80' }}>
           <div style={{ fontSize: '0.75rem', color: '#97a3b3', fontWeight: 700 }}>Total Inventory Value</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white', marginTop: '0.25rem' }}>PKR 1,485,200</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white', marginTop: '0.25rem' }}>{totalVal}</div>
         </div>
         <div style={{ background: '#131921', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid #1b2530', borderLeft: '4px solid #f87171' }}>
           <div style={{ fontSize: '0.75rem', color: '#97a3b3', fontWeight: 700 }}>Under Minimum Alert</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#f87171', marginTop: '0.25rem' }}>4 SKUs Low</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#f87171', marginTop: '0.25rem' }}>{lowCount} SKUs Low</div>
         </div>
       </div>
 
