@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { Crown, Lock, User, ArrowRight, ShieldCheck, Sparkles, Store, Mail } from 'lucide-react';
 
-export function LoginPage(): React.JSX.Element {
+interface LoginPageProps {
+  onBack?: () => void;
+}
+
+export function LoginPage({ onBack }: LoginPageProps = {}): React.JSX.Element {
   const [mode, setMode] = useState<'signin' | 'register'>('signin');
 
   // Sign In fields
@@ -114,6 +118,30 @@ export function LoginPage(): React.JSX.Element {
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
         }}
       >
+        {/* Back to product showcase */}
+        {onBack && (
+          <div style={{ marginBottom: '1rem' }}>
+            <button
+              type="button"
+              onClick={onBack}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#f7a83e',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.2rem 0',
+              }}
+            >
+              ← Back to Product Overview
+            </button>
+          </div>
+        )}
+
         {/* Brand header */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div

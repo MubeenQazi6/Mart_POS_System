@@ -4,7 +4,11 @@ import { useWarehouseAuthStore } from '@/stores/warehouseAuthStore';
 import type { WarehouseUser } from '@/stores/warehouseAuthStore';
 import { WAREHOUSE_ENV_CONFIG } from '@/config/env';
 
-export const WarehouseLoginPage: React.FC = () => {
+interface WarehouseLoginPageProps {
+  onBack?: () => void;
+}
+
+export const WarehouseLoginPage: React.FC<WarehouseLoginPageProps> = ({ onBack }) => {
   const { login, register, isLoading, error } = useWarehouseAuthStore();
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [emailOrUser, setEmailOrUser] = useState('');
@@ -74,6 +78,15 @@ export const WarehouseLoginPage: React.FC = () => {
 
       {/* Auth Card */}
       <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 backdrop-blur-xl rounded-2xl p-8 shadow-2xl relative z-10">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="mb-4 inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 font-medium transition"
+          >
+            ← Back to Product Overview
+          </button>
+        )}
         <div className="flex border-b border-slate-800 mb-6">
           <button
             type="button"

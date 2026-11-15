@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { LoginPage } from '@/features/auth/LoginPage';
+import { MartPosProductShowcase } from '@/features/landing/MartPosProductShowcase';
 import { UatGatekeeper } from '@/components/shell/UatGatekeeper';
 import { Crown, Loader2, Database, ShieldCheck } from 'lucide-react';
 import { APP_NAME } from '@shared/constants/app';
@@ -17,6 +18,7 @@ import { APP_NAME } from '@shared/constants/app';
 export default function App(): React.JSX.Element {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
   const { isAuthenticated, isInitializing, initAuth } = useAuthStore();
   const { loadSettings } = useSettingsStore();
   const { initTheme } = useThemeStore();
@@ -111,7 +113,11 @@ export default function App(): React.JSX.Element {
       <ErrorBoundary>
         <ToastProvider>
           {!isAuthenticated ? (
-            <LoginPage />
+            showLogin ? (
+              <LoginPage onBack={() => setShowLogin(false)} />
+            ) : (
+              <MartPosProductShowcase onProceedToLogin={() => setShowLogin(true)} />
+            )
           ) : (
             <HashRouter>
               <AppShell appInfo={appInfo}>

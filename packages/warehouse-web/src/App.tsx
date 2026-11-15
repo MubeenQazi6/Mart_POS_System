@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { WarehouseLayout } from './components/layout/WarehouseLayout';
 import { WarehouseRoutes } from './routes';
 import { WarehouseUatGatekeeper } from './components/shell/WarehouseUatGatekeeper';
 import { WarehouseLoginPage } from './features/auth/WarehouseLoginPage';
+import { WarehouseProductShowcase } from './features/landing/WarehouseProductShowcase';
 import { useWarehouseAuthStore } from './stores/warehouseAuthStore';
 import { Loader2 } from 'lucide-react';
 
 export default function App(): React.JSX.Element {
   const { isAuthenticated, isLoading, initAuth } = useWarehouseAuthStore();
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     void initAuth();
@@ -22,7 +24,11 @@ export default function App(): React.JSX.Element {
           <span className="text-sm font-medium text-slate-400">Loading WarehouseOS Core Engine...</span>
         </div>
       ) : !isAuthenticated ? (
-        <WarehouseLoginPage />
+        showLogin ? (
+          <WarehouseLoginPage onBack={() => setShowLogin(false)} />
+        ) : (
+          <WarehouseProductShowcase onProceedToLogin={() => setShowLogin(true)} />
+        )
       ) : (
         <HashRouter>
           <WarehouseLayout>

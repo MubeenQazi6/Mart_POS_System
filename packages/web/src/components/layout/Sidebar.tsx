@@ -1,9 +1,10 @@
-import { type ElementType } from 'react';
+import { type ElementType, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { APP_NAME, NAV_SECTIONS } from '@shared/constants/app';
 import { Tooltip } from '@renderer/components/ui/Tooltip';
 import { useAuthStore } from '@renderer/stores/authStore';
 import { useSettingsStore } from '@renderer/stores/settingsStore';
+import { DownloadDesktopModal } from '@renderer/components/ui/DownloadDesktopModal';
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -24,6 +25,7 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
+  Monitor,
 } from 'lucide-react';
 
 const iconMap: Record<string, ElementType> = {
@@ -51,6 +53,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps): React.JSX.Element {
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const { canAccessModule, currentUser } = useAuthStore();
   const { settings } = useSettingsStore();
 
@@ -151,6 +154,26 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps): React.JSX.Elem
 
       {/* Footer / System Status */}
       <div className="border-t border-slate-800 p-3">
+        {/* Download Desktop App CTA */}
+        <button
+          type="button"
+          onClick={() => setShowDownloadModal(true)}
+          className={`w-full mb-2.5 flex items-center ${
+            isCollapsed ? 'justify-center p-2' : 'gap-2.5 px-3 py-2'
+          } rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/30 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition-all text-xs font-semibold group`}
+          title="Download Desktop App"
+        >
+          <Monitor className="h-4 w-4 shrink-0 text-amber-400 group-hover:scale-110 transition-transform" />
+          {!isCollapsed && (
+            <div className="text-left min-w-0 flex-1">
+              <span className="block font-bold text-white text-[11px] group-hover:text-amber-400 transition-colors">
+                Download Desktop App
+              </span>
+              <span className="block text-[10px] text-slate-400 font-mono">100% Offline SQLite</span>
+            </div>
+          )}
+        </button>
+
         {/* Role badge */}
         {currentUser && !isCollapsed && (
           <div className="mb-2 flex items-center gap-2 rounded-lg bg-slate-900 px-2.5 py-1.5 border border-slate-800">
@@ -177,6 +200,13 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps): React.JSX.Elem
           )}
         </div> */}
       </div>
+
+      <DownloadDesktopModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        appName="MartPOS Enterprise Desktop"
+        version="v1.0.0"
+      />
     </aside>
   );
 }

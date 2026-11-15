@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { WarehouseDownloadDesktopModal } from '../ui/WarehouseDownloadDesktopModal';
 import {
   LayoutDashboard,
   FileInput,
@@ -13,6 +14,7 @@ import {
   Layers,
   ChevronRight,
   TrendingUp,
+  Monitor,
 } from 'lucide-react';
 import { useWarehouseStore } from '../../stores/warehouseStore';
 
@@ -48,6 +50,7 @@ const NAV_SECTIONS: NavSection[] = [
 ];
 
 export function WarehouseSidebar(): React.JSX.Element {
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const { kpis, bins } = useWarehouseStore();
   const totalBins = bins.length || 8;
   const occupiedBins = bins.filter((b) => b.status === 'occupied' || b.status === 'full').length || 5;
@@ -121,6 +124,22 @@ export function WarehouseSidebar(): React.JSX.Element {
 
       {/* Storage Capacity Gauge Card at Bottom */}
       <div className="p-4 border-t border-slate-800 bg-slate-950/60">
+        {/* Download Desktop App Button */}
+        <button
+          type="button"
+          onClick={() => setShowDownloadModal(true)}
+          className="w-full mb-3 flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 hover:border-cyan-400 text-cyan-400 hover:text-cyan-300 transition-all text-xs font-semibold group"
+          title="Download Desktop App"
+        >
+          <Monitor className="h-4 w-4 shrink-0 text-cyan-400 group-hover:scale-110 transition-transform" />
+          <div className="text-left min-w-0 flex-1">
+            <span className="block font-bold text-white text-[11px] group-hover:text-cyan-400 transition-colors">
+              Download Desktop App
+            </span>
+            <span className="block text-[10px] text-slate-400 font-mono">100% Offline warehouse.db</span>
+          </div>
+        </button>
+
         <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="font-bold text-slate-300 flex items-center gap-1.5">
@@ -146,6 +165,13 @@ export function WarehouseSidebar(): React.JSX.Element {
           </div>
         </div>
       </div>
+
+      <WarehouseDownloadDesktopModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        appName="WarehouseOS Enterprise Desktop"
+        version="v1.0.0"
+      />
     </aside>
   );
 }
