@@ -128,6 +128,7 @@ function ReturnModal({
         quantity: Math.round(qty * 1000),
         note: `RETURN: ${reason}${notes ? ` - ${notes}` : ''} | Date: ${returnDate}`,
         source: 'return',
+        direction: 'out',
       });
 
       if (response?.success) {

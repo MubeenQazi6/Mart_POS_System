@@ -14,9 +14,10 @@ import {
   cashSessions,
   cashMovements,
 } from '../database/schema/index';
-import { eq, desc, and, like, or, sql } from 'drizzle-orm';
+import { eq, desc, and, like, or, sql, isNull } from 'drizzle-orm';
 import { generateInvoiceNumber, calculateCartTotals } from '../domain/sales';
 import { logAuditEvent } from './audit';
+import { getSetting } from './settings';
 import type {
   CreateSaleInput,
   SaleRow,
@@ -86,7 +87,10 @@ export function getLastInvoiceSequence(tx?: ReturnType<typeof getDb>): number {
  */
 export function lookupByBarcode(barcode: string): PosLookupResult | null {
   const db = getDb();
-  const row = db
+  const clean = barcode.trim();
+  if (!clean) return null;
+
+  let row = db
     .select({
       variant_id: productVariants.id,
       product_id: products.id,
@@ -103,13 +107,78 @@ export function lookupByBarcode(barcode: string): PosLookupResult | null {
     .innerJoin(products, eq(productVariants.product_id, products.id))
     .where(
       and(
-        eq(productBarcodes.barcode, barcode),
+        eq(productBarcodes.barcode, clean),
         eq(productBarcodes.is_active, true),
         eq(productVariants.is_active, true),
         eq(products.is_active, true),
+        isNull(products.deleted_at),
+        isNull(productVariants.deleted_at),
       ),
     )
     .get();
+
+  // If not found and is 12-14 digits, check alternate leading-zero representation (UPC-A vs EAN-13)
+  if (!row && /^\d{12,14}$/.test(clean)) {
+    const altBarcode = clean.startsWith('0') ? clean.replace(/^0+/, '') : ('0' + clean);
+    row = db
+      .select({
+        variant_id: productVariants.id,
+        product_id: products.id,
+        product_name: products.name,
+        variant_name: productVariants.variant_name,
+        sku: productVariants.sku,
+        selling_price_minor: productVariants.selling_price_minor,
+        barcode: productBarcodes.barcode,
+        is_active: productVariants.is_active,
+        available_stock: sql<number>`coalesce((select sum(case when sm.movement_type = 'IN' then sm.quantity else -sm.quantity end) from stock_movements sm where sm.variant_id = ${productVariants.id}), 0)`.mapWith(Number),
+      })
+      .from(productBarcodes)
+      .innerJoin(productVariants, eq(productBarcodes.variant_id, productVariants.id))
+      .innerJoin(products, eq(productVariants.product_id, products.id))
+      .where(
+        and(
+          eq(productBarcodes.barcode, altBarcode),
+          eq(productBarcodes.is_active, true),
+          eq(productVariants.is_active, true),
+          eq(products.is_active, true),
+          isNull(products.deleted_at),
+          isNull(productVariants.deleted_at),
+        ),
+      )
+      .get();
+  }
+
+  // If not found by barcode, check if clean matches an SKU directly
+  if (!row) {
+    const skuVariant = db
+      .select({
+        variant_id: productVariants.id,
+        product_id: products.id,
+        product_name: products.name,
+        variant_name: productVariants.variant_name,
+        sku: productVariants.sku,
+        selling_price_minor: productVariants.selling_price_minor,
+        barcode: sql<string>`coalesce((select pb.barcode from product_barcodes pb where pb.variant_id = ${productVariants.id} and pb.is_active = 1 order by pb.is_primary desc limit 1), '')`.mapWith(String),
+        is_active: productVariants.is_active,
+        available_stock: sql<number>`coalesce((select sum(case when sm.movement_type = 'IN' then sm.quantity else -sm.quantity end) from stock_movements sm where sm.variant_id = ${productVariants.id}), 0)`.mapWith(Number),
+      })
+      .from(productVariants)
+      .innerJoin(products, eq(productVariants.product_id, products.id))
+      .where(
+        and(
+          eq(productVariants.sku, clean),
+          eq(productVariants.is_active, true),
+          eq(products.is_active, true),
+          isNull(products.deleted_at),
+          isNull(productVariants.deleted_at),
+        ),
+      )
+      .get();
+
+    if (skuVariant) {
+      row = skuVariant;
+    }
+  }
 
   if (!row) return null;
   return row;
@@ -246,11 +315,12 @@ export function createSale(input: CreateSaleInput): SaleRow {
             throw new Error(`Product variant #${String(item.variant_id)} is inactive and cannot be sold`);
           }
 
+          const allowNegativeStock = Boolean(getSetting('pos.allow_negative_stock'));
           const isManualItem = item.is_manual === true;
-          if (!isManualItem && variant.available_stock <= 0) {
+          if (!isManualItem && !allowNegativeStock && variant.available_stock <= 0) {
             throw new Error(`Variant #${String(item.variant_id)} is out of stock`);
           }
-          if (!isManualItem && item.quantity > variant.available_stock) {
+          if (!isManualItem && !allowNegativeStock && item.quantity > variant.available_stock) {
             throw new Error(`Only ${String(variant.available_stock / 1000)} units are available for variant #${String(item.variant_id)}`);
           }
 

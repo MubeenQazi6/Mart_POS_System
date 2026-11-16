@@ -1,28 +1,14 @@
 import React, { useState } from 'react';
 import { useLicensingStore } from '@renderer/stores/licensingStore';
-import {
-  ShieldAlert,
-  Key,
-  Copy,
-  Check,
-  Upload,
-  Lock,
-  Globe,
-  RefreshCw,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { ShieldAlert, Key, Copy, Check, Upload, Lock } from 'lucide-react';
 import { Button } from '@renderer/components/ui/Button';
 import { showToast } from '@renderer/components/ui/Toast';
 import { APP_NAME } from '@shared/constants/app';
 
 export function LicenseLockScreen(): React.JSX.Element {
-  const { machineCode, activate, isActivating, loadStatus } = useLicensingStore();
+  const { machineCode, activate, isActivating } = useLicensingStore();
   const [licenseInput, setLicenseInput] = useState('');
   const [copied, setCopied] = useState(false);
-  const [isCheckingCloud, setIsCheckingCloud] = useState(false);
-  const [showManualKeySection, setShowManualKeySection] = useState(false);
 
   const handleCopyCode = async (): Promise<void> => {
     try {
@@ -32,26 +18,6 @@ export function LicenseLockScreen(): React.JSX.Element {
       setTimeout(() => { setCopied(false); }, 2000);
     } catch {
       showToast('error', 'Failed to copy machine code');
-    }
-  };
-
-  const handleOpenWebUpgrade = (): void => {
-    // Open the web SaaS billing page in default browser
-    const webUrl = 'http://localhost:5174/billing';
-    window.open(webUrl, '_blank');
-  };
-
-  const handleCheckCloudSubscription = async (): Promise<void> => {
-    setIsCheckingCloud(true);
-    try {
-      // In cursor-style flow, we poll the cloud subscription endpoint or check local token
-      // For immediate responsiveness, reload status
-      await loadStatus();
-      showToast('info', 'Checked cloud license. If you just subscribed, app will unlock momentarily.');
-    } catch (err) {
-      showToast('error', err instanceof Error ? err.message : 'Could not check cloud subscription');
-    } finally {
-      setIsCheckingCloud(false);
     }
   };
 
@@ -91,126 +57,84 @@ export function LicenseLockScreen(): React.JSX.Element {
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-rose-950 px-2.5 py-0.5 text-[10px] font-bold text-rose-400 border border-rose-800 uppercase tracking-wide">
-                Trial Expired / Activation Required
+                Trial Expired / Unlicensed
               </span>
             </div>
             <h1 className="text-xl font-black text-white uppercase tracking-tight mt-1">
-              {APP_NAME} — Unlock Access
+              {APP_NAME} — Activation Required
             </h1>
             <p className="text-xs text-slate-400">
-              Your free trial has ended. Subscribe on the web to automatically unlock without license keys.
+              Your 3-day free trial has expired. Activate software to unlock permanent access.
             </p>
           </div>
         </div>
 
-        {/* 🌟 CURSOR-STYLE ZERO-KEY ACTIVATION BOX */}
-        <div className="rounded-xl border border-brand-500/40 bg-gradient-to-br from-brand-950/40 to-slate-950 p-5 space-y-3.5 shadow-md">
-          <div className="flex items-center gap-2 text-brand-400 font-bold text-xs uppercase tracking-wider">
-            <Sparkles className="h-4 w-4" />
-            <span>Automatic Cloud Activation (Recommended)</span>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Subscribe to any plan on the web platform. Your desktop application will detect your subscription and unlock automatically — no keys or copying required!
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
-            <button
-              type="button"
-              onClick={handleOpenWebUpgrade}
-              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-slate-950 font-bold text-xs py-2.5 px-4 rounded-lg shadow-md transition-all cursor-pointer"
-            >
-              <Globe className="h-4 w-4" />
-              <span>Subscribe on Web</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => { void handleCheckCloudSubscription(); }}
-              disabled={isCheckingCloud}
-              className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs py-2.5 px-4 rounded-lg transition-colors cursor-pointer"
-            >
-              <RefreshCw className={`h-4 w-4 ${isCheckingCloud ? 'animate-spin' : ''}`} />
-              <span>{isCheckingCloud ? 'Checking...' : 'Check Cloud License'}</span>
-            </button>
-          </div>
-        </div>
-
         {/* Machine Code Box */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-2">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400">Your Machine Code</span>
+            <span className="text-xs font-bold text-amber-300">Step 1: Your Computer Machine Code</span>
             <button
               type="button"
               onClick={() => { void handleCopyCode(); }}
-              className="flex items-center gap-1 text-[11px] font-semibold text-brand-400 hover:text-brand-300 cursor-pointer"
+              className="flex items-center gap-1 text-[11px] font-semibold text-amber-400 hover:text-amber-200"
             >
               {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
               <span>{copied ? 'Copied' : 'Copy Code'}</span>
             </button>
           </div>
-          <div className="rounded-lg border border-slate-800 bg-slate-900 px-3.5 py-2 font-mono text-sm font-bold text-amber-400 tracking-widest text-center">
+          <div className="rounded-lg border border-amber-900/60 bg-slate-950 px-3.5 py-2 font-mono text-sm font-bold text-amber-300 tracking-widest text-center">
             {machineCode || 'DETECTING-HARDWARE...'}
           </div>
+          <p className="text-[11px] text-slate-400">
+            Send this machine code to the software vendor to receive your genuine license JSON file.
+          </p>
         </div>
 
-        {/* Toggle Manual Offline File Entry */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowManualKeySection(!showManualKeySection)}
-            className="flex items-center justify-between w-full text-xs font-semibold text-slate-400 hover:text-slate-200 py-2 border-t border-slate-800 cursor-pointer"
-          >
-            <span>Have an offline vendor license JSON file?</span>
-            {showManualKeySection ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-
-          {showManualKeySection && (
-            <form onSubmit={(e) => { void handleActivateSubmit(e); }} className="space-y-4 pt-3">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="license-json-input" className="text-xs font-bold text-slate-300">
-                    Enter or Import Signed License JSON
-                  </label>
-                  <label className="flex items-center gap-1 text-xs font-semibold text-brand-400 hover:text-brand-300 cursor-pointer">
-                    <Upload className="h-3.5 w-3.5" />
-                    <span>Upload .json file</span>
-                    <input
-                      type="file"
-                      accept=".json,text/plain"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                <textarea
-                  id="license-json-input"
-                  rows={3}
-                  value={licenseInput}
-                  onChange={(e) => { setLicenseInput(e.target.value); }}
-                  placeholder='Paste your signed license JSON here, e.g. { "payload": { ... }, "signature": "..." }'
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 font-mono text-xs text-slate-200 placeholder-slate-600 focus:border-brand-500 focus:outline-hidden focus:ring-1 focus:ring-brand-500"
+        {/* Activation Form */}
+        <form onSubmit={(e) => { void handleActivateSubmit(e); }} className="space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="license-json-input" className="text-xs font-bold text-slate-300">
+                Step 2: Enter or Import License JSON
+              </label>
+              <label className="flex items-center gap-1 text-xs font-semibold text-brand-400 hover:text-brand-300 cursor-pointer">
+                <Upload className="h-3.5 w-3.5" />
+                <span>Upload .json file</span>
+                <input
+                  type="file"
+                  accept=".json,text/plain"
+                  onChange={handleFileUpload}
+                  className="hidden"
                 />
-              </div>
+              </label>
+            </div>
+            <textarea
+              id="license-json-input"
+              rows={4}
+              value={licenseInput}
+              onChange={(e) => { setLicenseInput(e.target.value); }}
+              placeholder='Paste your signed license JSON here, e.g. { "payload": { ... }, "signature": "..." }'
+              className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 font-mono text-xs text-slate-200 placeholder-slate-600 focus:border-brand-500 focus:outline-hidden focus:ring-1 focus:ring-brand-500"
+            />
+          </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                  <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
-                  <span>Ed25519 Cryptographic Verification</span>
-                </div>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="md"
-                  isLoading={isActivating}
-                  disabled={isActivating || !licenseInput.trim()}
-                  leftIcon={<Key className="h-4 w-4" />}
-                >
-                  Verify License File
-                </Button>
-              </div>
-            </form>
-          )}
-        </div>
+          <div className="flex items-center justify-between pt-2">
+            <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
+              <span>Offline Ed25519 Cryptographic Verification</span>
+            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              isLoading={isActivating}
+              disabled={isActivating || !licenseInput.trim()}
+              leftIcon={<Key className="h-4 w-4" />}
+            >
+              Verify &amp; Activate System
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );

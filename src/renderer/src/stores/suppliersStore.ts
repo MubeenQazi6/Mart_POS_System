@@ -8,6 +8,7 @@ import type {
   RecordSupplierPaymentInput,
 } from '@shared/types/purchases';
 import { showToast } from '@renderer/components/ui/Toast';
+import { usePurchasesStore } from './purchasesStore';
 
 interface SuppliersState {
   suppliers: SupplierRow[];
@@ -115,6 +116,12 @@ export const useSuppliersStore = create<SuppliersState>((set, get) => ({
       void get().loadSuppliers();
       if (get().selectedSupplier?.id === input.supplier_id) {
         void get().loadLedger(input.supplier_id);
+      }
+      // Instantly refresh purchases store so purchases page reflects payment
+      void usePurchasesStore.getState().loadPurchases();
+      void usePurchasesStore.getState().loadKpis();
+      if (input.purchase_id && usePurchasesStore.getState().selectedPurchase?.id === input.purchase_id) {
+        void usePurchasesStore.getState().loadPurchaseById(input.purchase_id);
       }
       return true;
     }

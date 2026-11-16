@@ -144,5 +144,7 @@ export interface PurchasePaymentRow {
 export interface PurchaseKpis {
   total_purchases_count: number;
   total_purchases_value_minor: MoneyMinor;
+  total_paid_minor: MoneyMinor;
+  total_balance_minor?: MoneyMinor;
   total_payables_minor: MoneyMinor;
 }

@@ -154,21 +154,17 @@ export function BarcodeLabelsPage(): React.JSX.Element {
       }
       JsBarcode(svg, barcode, {
         format,
-        width: 1.6,
-        height: 40,
+        width: 1.3,
+        height: 26,
         displayValue: true,
-        fontSize: 12,
-        font: 'monospace',
-        fontOptions: 'bold',
-        margin: 2,
+        fontSize: 8.5,
+        font: 'Arial, sans-serif',
+        fontOptions: '',
+        textMargin: 1,
+        margin: 0,
         background: '#ffffff',
         lineColor: '#000000',
       });
-      const w = svg.getAttribute('width');
-      const h = svg.getAttribute('height');
-      if (w && h) {
-        svg.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
-      }
       svg.setAttribute('shape-rendering', 'crispEdges');
       svg.style.shapeRendering = 'crispEdges';
       return svg.outerHTML;
@@ -177,26 +173,22 @@ export function BarcodeLabelsPage(): React.JSX.Element {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         JsBarcode(svg, barcode, {
           format: 'CODE128',
-          width: 1.4,
-          height: 40,
+          width: 1.2,
+          height: 26,
           displayValue: true,
-          fontSize: 12,
-          font: 'monospace',
-          fontOptions: 'bold',
-          margin: 2,
+          fontSize: 8.5,
+          font: 'Arial, sans-serif',
+          fontOptions: '',
+          textMargin: 1,
+          margin: 0,
           background: '#ffffff',
           lineColor: '#000000',
         });
-        const w = svg.getAttribute('width');
-        const h = svg.getAttribute('height');
-        if (w && h) {
-          svg.setAttribute('viewBox', `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
-        }
         svg.setAttribute('shape-rendering', 'crispEdges');
         svg.style.shapeRendering = 'crispEdges';
         return svg.outerHTML;
       } catch {
-        return `<div style="font-family: monospace; font-size: 12px; font-weight: bold; color: #000000; padding: 6px;">${barcode}</div>`;
+        return `<div style="font-family: Arial, sans-serif; font-size: 9px; font-weight: 600; color: #000000; padding: 2px;">${barcode}</div>`;
       }
     }
   };
@@ -230,7 +222,14 @@ export function BarcodeLabelsPage(): React.JSX.Element {
     }
 
     const svgHtml = generateBarcodeSvgString(barcode, barcodeType);
-    const priceFormatted = formatMoneyFromMinor(priceMinor);
+    const priceFormatted = (priceMinor / 100).toLocaleString('en-PK', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const displayName =
+      variantName && variantName !== 'Standard' && variantName !== 'Default'
+        ? `${productName} (${variantName})`
+        : productName;
 
     const stickerHtml = `
       <!DOCTYPE html>
@@ -240,8 +239,8 @@ export function BarcodeLabelsPage(): React.JSX.Element {
         <title>${storeName} — Print Stickers (${barcode})</title>
         <style>
           @page {
-            size: auto;
-            margin: 2mm;
+            size: 50mm 25mm;
+            margin: 0;
           }
           *, *::before, *::after {
             box-sizing: border-box;
@@ -250,109 +249,138 @@ export function BarcodeLabelsPage(): React.JSX.Element {
             text-shadow: none !important;
             box-shadow: none !important;
           }
-          body {
-            font-family: 'Courier New', Courier, monospace, system-ui, -apple-system, sans-serif;
+          html, body {
             margin: 0;
-            padding: 2px;
+            padding: 0;
+            width: 50mm;
             background: #ffffff !important;
             color: #000000 !important;
-            -webkit-font-smoothing: none !important;
-            text-rendering: geometricPrecision !important;
+            font-family: Arial, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased !important;
+            text-rendering: optimizeLegibility !important;
           }
-          .sticker-sheet {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            justify-content: flex-start;
-          }
-          .sticker {
-            width: 48mm;
-            height: 30mm;
-            border: 1px dashed #000000;
-            padding: 2mm 2.5mm;
-            text-align: center;
+          .sticker-page {
+            width: 50mm;
+            height: 25mm;
+            max-width: 50mm;
+            max-height: 25mm;
+            padding: 1mm 1.5mm 0.5mm 1.5mm;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
+            text-align: center;
+            page-break-after: always;
+            break-after: page;
             page-break-inside: avoid;
+            break-inside: avoid;
+            overflow: hidden;
             background: #ffffff !important;
+            border: none !important;
+          }
+          .sticker-page:last-child {
+            page-break-after: auto;
+            break-after: auto;
           }
           .store-brand {
             font-size: 8px;
-            font-weight: 900;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #000000 !important;
-            line-height: 1;
-          }
-          .item-name {
-            font-size: 9.5px;
-            font-weight: 800;
             color: #000000 !important;
             line-height: 1.1;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            margin-top: 1px;
           }
-          .variant-name {
+          .item-info {
+            width: 100%;
+            margin: 0.2mm 0;
+            line-height: 1.15;
+            max-height: 5.5mm;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+          .item-name {
             font-size: 8.5px;
-            font-weight: 700;
+            font-weight: 600;
             color: #000000 !important;
-            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            line-height: 1.15;
+            letter-spacing: 0.1px;
           }
           .barcode-wrapper {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 1px 0;
+            width: 100%;
+            margin: 0;
+            overflow: hidden;
           }
           .barcode-wrapper svg {
-            max-width: 100%;
-            height: 36px;
+            max-width: 46mm;
+            height: 11mm;
             width: auto;
             shape-rendering: crispEdges !important;
           }
-          /* IMPORTANT: Do NOT set fill on .barcode-wrapper svg children.
-             JsBarcode already generates: white background rect + black bar rects.
-             Any fill override here will turn the whole barcode into a solid black box. */
           .barcode-wrapper svg rect,
           .barcode-wrapper svg path {
             shape-rendering: crispEdges !important;
-            image-rendering: pixelated !important;
           }
           .barcode-wrapper svg text {
-            font-family: monospace !important;
-            font-weight: bold !important;
+            font-family: Arial, "Segoe UI", 'Courier New', monospace !important;
+            font-size: 8px !important;
+            font-weight: 600 !important;
             fill: #000000 !important;
           }
-          .price-badge {
-            font-size: 13px;
-            font-weight: 900;
-            color: #000000 !important;
-            letter-spacing: -0.3px;
+          .price-row {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            width: 100%;
             line-height: 1;
+            padding-bottom: 0.5mm;
+          }
+          .price-label {
+            font-size: 8px;
+            font-weight: 700;
+            margin-right: 3px;
+            color: #000000 !important;
+            text-transform: uppercase;
+          }
+          .price-value {
+            font-size: 11px;
+            font-weight: 700;
+            color: #000000 !important;
+            letter-spacing: 0.1px;
           }
         </style>
       </head>
       <body>
-        <div class="sticker-sheet">
-          ${Array.from({ length: qty })
-            .map(
-              () => `
-            <div class="sticker">
-              <div class="store-brand">${storeName}</div>
-              <div class="item-name">${productName}</div>
-              ${variantName ? `<div class="variant-name">${variantName}</div>` : ''}
-              <div class="barcode-wrapper">${svgHtml}</div>
-              <div class="price-badge">${priceFormatted}</div>
+        ${Array.from({ length: qty })
+          .map(
+            () => `
+          <div class="sticker-page">
+            <div class="store-brand">${storeName}</div>
+            <div class="item-info">
+              <div class="item-name">${displayName}</div>
             </div>
-          `,
-            )
-            .join('')}
-        </div>
+            <div class="barcode-wrapper">${svgHtml}</div>
+            <div class="price-row">
+              <span class="price-label">Rs.</span>
+              <span class="price-value">${priceFormatted}</span>
+            </div>
+          </div>
+        `,
+          )
+          .join('')}
       </body>
       </html>
     `;
@@ -361,6 +389,7 @@ export function BarcodeLabelsPage(): React.JSX.Element {
       const res = await window.martpos.hardware.printSilent({
         html: stickerHtml,
         printerType: 'label',
+        pageSize: { width: 50000, height: 25000 },
       });
       if (res.success) {
         if (jobId) {
@@ -399,6 +428,239 @@ export function BarcodeLabelsPage(): React.JSX.Element {
         void updatePrintJobStatus(jobId, 'printed');
       }
       showToast('success', `Sent ${qty} sticker label(s) to printer`);
+
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+        void loadPrintJobs();
+      }, 3000);
+    }, 250);
+  };
+
+  // Print all pending jobs in the queue in one batch
+  const handlePrintAllPending = async (): Promise<void> => {
+    const pendingJobs = printJobs.filter((j) => j.status === 'pending');
+    if (pendingJobs.length === 0) {
+      showToast('info', 'No pending print jobs in the queue');
+      return;
+    }
+
+    const totalLabels = pendingJobs.reduce((acc, j) => acc + j.quantity, 0);
+
+    const pagesHtml = pendingJobs
+      .map((job) => {
+        const svg = generateBarcodeSvgString(job.barcode || '', job.barcode_type || 'EAN13');
+        const price = (Number(job.selling_price_minor || 0) / 100).toLocaleString('en-PK', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        const displayName =
+          job.variant_name && job.variant_name !== 'Standard' && job.variant_name !== 'Default'
+            ? `${job.product_name} (${job.variant_name})`
+            : (job.product_name || 'Product');
+
+        return Array.from({ length: job.quantity })
+          .map(
+            () => `
+          <div class="sticker-page">
+            <div class="store-brand">${storeName}</div>
+            <div class="item-info">
+              <div class="item-name">${displayName}</div>
+            </div>
+            <div class="barcode-wrapper">${svg}</div>
+            <div class="price-row">
+              <span class="price-label">Rs.</span>
+              <span class="price-value">${price}</span>
+            </div>
+          </div>
+        `,
+          )
+          .join('');
+      })
+      .join('');
+
+    const batchHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${storeName} — Batch Print (${totalLabels} Labels)</title>
+        <style>
+          @page {
+            size: 50mm 25mm;
+            margin: 0;
+          }
+          *, *::before, *::after {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            text-shadow: none !important;
+            box-shadow: none !important;
+          }
+          html, body {
+            margin: 0;
+            padding: 0;
+            width: 50mm;
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-family: Arial, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased !important;
+            text-rendering: optimizeLegibility !important;
+          }
+          .sticker-page {
+            width: 50mm;
+            height: 25mm;
+            max-width: 50mm;
+            max-height: 25mm;
+            padding: 1mm 1.5mm 0.5mm 1.5mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            overflow: hidden;
+            background: #ffffff !important;
+            border: none !important;
+          }
+          .sticker-page:last-child {
+            page-break-after: auto;
+            break-after: auto;
+          }
+          .store-brand {
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #000000 !important;
+            line-height: 1.1;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .item-info {
+            width: 100%;
+            margin: 0.2mm 0;
+            line-height: 1.15;
+            max-height: 5.5mm;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+          .item-name {
+            font-size: 8.5px;
+            font-weight: 600;
+            color: #000000 !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            line-height: 1.15;
+            letter-spacing: 0.1px;
+          }
+          .barcode-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 0;
+            overflow: hidden;
+          }
+          .barcode-wrapper svg {
+            max-width: 46mm;
+            height: 11mm;
+            width: auto;
+            shape-rendering: crispEdges !important;
+          }
+          .barcode-wrapper svg rect,
+          .barcode-wrapper svg path {
+            shape-rendering: crispEdges !important;
+          }
+          .barcode-wrapper svg text {
+            font-family: Arial, "Segoe UI", 'Courier New', monospace !important;
+            font-size: 8px !important;
+            font-weight: 600 !important;
+            fill: #000000 !important;
+          }
+          .price-row {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            width: 100%;
+            line-height: 1;
+            padding-bottom: 0.5mm;
+          }
+          .price-label {
+            font-size: 8px;
+            font-weight: 700;
+            margin-right: 3px;
+            color: #000000 !important;
+            text-transform: uppercase;
+          }
+          .price-value {
+            font-size: 11px;
+            font-weight: 700;
+            color: #000000 !important;
+            letter-spacing: 0.1px;
+          }
+        </style>
+      </head>
+      <body>
+        ${pagesHtml}
+      </body>
+      </html>
+    `;
+
+    if (window.martpos?.hardware?.printSilent) {
+      const res = await window.martpos.hardware.printSilent({
+        html: batchHtml,
+        printerType: 'label',
+        pageSize: { width: 50000, height: 25000 },
+      });
+      if (res.success) {
+        for (const job of pendingJobs) {
+          void updatePrintJobStatus(job.id, 'printed');
+        }
+        showToast('success', `Sent ${totalLabels} sticker label(s) across ${pendingJobs.length} job(s) to printer`);
+        void loadPrintJobs();
+      } else {
+        showToast('error', res.error || 'Failed to print batch stickers');
+      }
+      return;
+    }
+
+    // Fallback for non-electron environments
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
+
+    doc.open();
+    doc.write(batchHtml);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+
+      for (const job of pendingJobs) {
+        void updatePrintJobStatus(job.id, 'printed');
+      }
+      showToast('success', `Sent ${totalLabels} sticker label(s) to printer`);
 
       setTimeout(() => {
         if (document.body.contains(iframe)) {
@@ -698,24 +960,39 @@ export function BarcodeLabelsPage(): React.JSX.Element {
             </span>
           </div>
 
-          {/* Status Tabs */}
-          <div className="flex rounded-lg bg-slate-100 dark:bg-navy-700 p-1 text-xs">
-            {(['all', 'pending', 'printed', 'failed'] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
+          <div className="flex items-center gap-3">
+            {printJobs.some((j) => j.status === 'pending') && (
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Printer className="h-4 w-4" />}
                 onClick={() => {
-                  setStatusFilter(tab);
+                  void handlePrintAllPending();
                 }}
-                className={`rounded-md px-3 py-1.5 font-medium capitalize transition-colors ${
-                  statusFilter === tab
-                    ? 'bg-brand-600 text-white shadow-sm dark:bg-brand-600/80'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                }`}
               >
-                {tab}
-              </button>
-            ))}
+                Print All Pending ({printJobs.filter((j) => j.status === 'pending').reduce((sum, j) => sum + j.quantity, 0)} labels)
+              </Button>
+            )}
+
+            {/* Status Tabs */}
+            <div className="flex rounded-lg bg-slate-100 dark:bg-navy-700 p-1 text-xs">
+              {(['all', 'pending', 'printed', 'failed'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => {
+                    setStatusFilter(tab);
+                  }}
+                  className={`rounded-md px-3 py-1.5 font-medium capitalize transition-colors ${
+                    statusFilter === tab
+                      ? 'bg-brand-600 text-white shadow-sm dark:bg-brand-600/80'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

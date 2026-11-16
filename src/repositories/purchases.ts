@@ -410,8 +410,13 @@ export function getPurchaseKpis(): PurchaseKpis {
   const allSuppliers = db.select().from(suppliers).where(eq(suppliers.is_active, true)).all();
 
   let totalValue = 0;
+  let totalPaid = 0;
+  let totalBalance = 0;
+
   for (const p of allPurchases) {
     totalValue += p.total_minor;
+    totalPaid += p.paid_amount_minor;
+    totalBalance += p.balance_minor;
   }
 
   let totalPayables = 0;
@@ -424,6 +429,8 @@ export function getPurchaseKpis(): PurchaseKpis {
   return {
     total_purchases_count: allPurchases.length,
     total_purchases_value_minor: totalValue,
+    total_paid_minor: totalPaid,
+    total_balance_minor: totalBalance,
     total_payables_minor: totalPayables,
   };
 }

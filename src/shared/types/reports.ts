@@ -32,6 +32,7 @@ export interface ReportFilterParams {
 // Sales Report
 export interface SalesReportSummary {
   total_sales_count: number;
+  gross_sales_minor?: MoneyMinor;
   subtotal_minor: MoneyMinor;
   discount_minor: MoneyMinor;
   tax_minor: MoneyMinor;
@@ -39,11 +40,44 @@ export interface SalesReportSummary {
   cash_collected_minor: MoneyMinor;
   card_collected_minor: MoneyMinor;
   credit_generated_minor: MoneyMinor;
+  returns_refunded_minor?: MoneyMinor;
+  total_returns_count?: number;
+  exchanges_difference_minor?: MoneyMinor;
+  total_exchanges_count?: number;
+}
+
+export interface SalesReportReturnItem {
+  id: number;
+  return_number: string;
+  sale_id: number;
+  invoice_number: string;
+  customer_name?: string | null;
+  refund_amount_minor: MoneyMinor;
+  refund_method: string;
+  reason: string;
+  items_summary?: string;
+  created_at: string;
+}
+
+export interface SalesReportExchangeItem {
+  id: number;
+  exchange_number: string;
+  sale_id: number;
+  invoice_number: string;
+  customer_name?: string | null;
+  return_total_minor: MoneyMinor;
+  replacement_total_minor: MoneyMinor;
+  difference_minor: MoneyMinor;
+  settlement_method: string;
+  reason: string;
+  created_at: string;
 }
 
 export interface SalesReportData {
   summary: SalesReportSummary;
   rows: SaleRow[];
+  returns?: SalesReportReturnItem[];
+  exchanges?: SalesReportExchangeItem[];
 }
 
 // Purchases Report

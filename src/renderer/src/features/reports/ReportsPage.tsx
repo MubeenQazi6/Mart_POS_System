@@ -20,6 +20,9 @@ import {
   ShieldAlert,
   Building2,
   Users,
+  RotateCcw,
+  ArrowLeftRight,
+  Receipt,
 } from 'lucide-react';
 
 export function ReportsPage(): React.JSX.Element {
@@ -343,10 +346,12 @@ function KpiCard({
   label,
   value,
   color = 'slate',
+  subtitle,
 }: {
   label: string;
   value: string | number;
   color?: string;
+  subtitle?: string;
 }): React.JSX.Element {
   const colorMap: Record<string, string> = {
     slate: 'text-slate-900 dark:text-slate-100',
@@ -363,6 +368,11 @@ function KpiCard({
       <div className={`text-2xl font-bold font-mono mt-1 ${colorMap[color] || colorMap.slate}`}>
         {value}
       </div>
+      {subtitle && (
+        <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
+          {subtitle}
+        </div>
+      )}
     </div>
   );
 }
@@ -473,70 +483,265 @@ function formatMoney(value: number): string {
 // ============== Report Components ==============
 
 function SalesReport({ data }: { data: any }): React.JSX.Element {
+  const [salesSubTab, setSalesSubTab] = useState<'invoices' | 'returns' | 'exchanges'>('invoices');
+
+  const grossSales = data.summary?.gross_sales_minor ?? data.summary?.net_sales_minor ?? 0;
+  const returnsRefunded = data.summary?.returns_refunded_minor ?? 0;
+  const returnsCount = data.summary?.total_returns_count ?? data.returns?.length ?? 0;
+  const exchangesCount = data.summary?.total_exchanges_count ?? data.exchanges?.length ?? 0;
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <KpiCard label="Invoices Issued" value={data.summary?.total_sales_count || 0} />
+        <KpiCard
+          label="Gross Sales"
+          value={formatMoney(grossSales)}
+          color="slate"
+        />
+        <KpiCard
+          label="Returns Refunded"
+          value={returnsRefunded > 0 ? `-${formatMoney(returnsRefunded)}` : 'Rs. 0.00'}
+          color={returnsRefunded > 0 ? 'rose' : 'slate'}
+          subtitle={`${returnsCount} return${returnsCount === 1 ? '' : 's'}`}
+        />
         <KpiCard
           label="Net Sales Revenue"
           value={formatMoney(data.summary?.net_sales_minor || 0)}
           color="emerald"
+          subtitle="After returns & exchanges"
         />
         <KpiCard
           label="Cash Collected"
           value={formatMoney(data.summary?.cash_collected_minor || 0)}
           color="blue"
+          subtitle="Net cash in till"
         />
         <KpiCard
           label="Khata Credit Given"
           value={formatMoney(data.summary?.credit_generated_minor || 0)}
           color="amber"
+          subtitle="Customer receivable"
         />
       </div>
-      <ReportTable
-        headers={[
-          'Invoice #',
-          'Date & Time',
-          'Status',
-          'Subtotal',
-          'Discount',
-          'Net Total',
-          'Payment Methods',
-        ]}
-        rows={data.rows || []}
-        renderRow={(row) => (
-          <>
-            <td className="py-3.5 px-4 font-semibold text-brand-600 dark:text-brand-400 whitespace-nowrap">
-              {row.invoice_number}
-            </td>
-            <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{row.created_at}</td>
-            <td className="py-3.5 px-4 text-center">
-              <Badge variant={row.status === 'completed' ? 'success' : 'warning'}>
-                {row.status}
-              </Badge>
-            </td>
-            <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap text-slate-700 dark:text-slate-300">
-              {formatMoney(row.subtotal_minor)}
-            </td>
-            <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap text-rose-500 dark:text-rose-400">
-              {row.discount_minor > 0 ? `-${formatMoney(row.discount_minor)}` : '0.00'}
-            </td>
-            <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap font-bold text-slate-900 dark:text-slate-100">
-              {formatMoney(row.total_minor)}
-            </td>
-            <td className="py-3.5 px-4 font-sans text-xs">
-              {row.payments?.map((p: any) => (
-                <span
-                  key={p.id}
-                  className="inline-block bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 mr-1.5 text-[11px] whitespace-nowrap font-mono"
-                >
-                  {p.payment_method}: {formatMoney(p.amount_minor)}
-                </span>
-              ))}
-            </td>
-          </>
-        )}
-      />
+
+      {/* Sub-view switcher */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
+        <button
+          onClick={() => setSalesSubTab('invoices')}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            salesSubTab === 'invoices'
+              ? 'bg-brand-500 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+          }`}
+        >
+          <Receipt className="w-3.5 h-3.5" />
+          <span>Sales Invoices</span>
+          <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${salesSubTab === 'invoices' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'}`}>
+            {data.rows?.length || 0}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setSalesSubTab('returns')}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            salesSubTab === 'returns'
+              ? 'bg-rose-600 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+          }`}
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Returns & Refunds Details</span>
+          <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${salesSubTab === 'returns' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'}`}>
+            {returnsCount}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setSalesSubTab('exchanges')}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            salesSubTab === 'exchanges'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+          }`}
+        >
+          <ArrowLeftRight className="w-3.5 h-3.5" />
+          <span>Exchanges Details</span>
+          <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${salesSubTab === 'exchanges' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300'}`}>
+            {exchangesCount}
+          </span>
+        </button>
+      </div>
+
+      {/* Tab 1: Sales Invoices */}
+      {salesSubTab === 'invoices' && (
+        <ReportTable
+          headers={[
+            'Invoice #',
+            'Date & Time',
+            'Status',
+            { label: 'Gross Total', align: 'right' },
+            { label: 'Returns Deducted', align: 'right' },
+            { label: 'Net Realized', align: 'right' },
+            'Payment Methods',
+          ]}
+          rows={data.rows || []}
+          renderRow={(row) => {
+            const returnedAmount = row.returned_amount_minor || 0;
+            const netRealized = row.net_realized_minor ?? Math.max(0, row.total_minor - returnedAmount);
+            return (
+              <>
+                <td className="py-3.5 px-4 font-semibold text-brand-600 dark:text-brand-400 whitespace-nowrap">
+                  <div className="flex items-center gap-1.5">
+                    <span>{row.invoice_number}</span>
+                    {row.has_returns && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
+                        Returned
+                      </span>
+                    )}
+                    {row.has_exchanges && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+                        Exchanged
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{row.created_at}</td>
+                <td className="py-3.5 px-4 text-center">
+                  <Badge variant={row.status === 'completed' ? 'success' : 'warning'}>
+                    {row.status}
+                  </Badge>
+                </td>
+                <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap text-slate-700 dark:text-slate-300">
+                  {formatMoney(row.total_minor)}
+                </td>
+                <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap">
+                  {returnedAmount > 0 ? (
+                    <span className="font-semibold text-rose-600 dark:text-rose-400">
+                      -{formatMoney(returnedAmount)}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 dark:text-slate-500">0.00</span>
+                  )}
+                </td>
+                <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap font-bold text-slate-900 dark:text-slate-100">
+                  {formatMoney(netRealized)}
+                </td>
+                <td className="py-3.5 px-4 font-sans text-xs">
+                  {row.payments?.map((p: any) => (
+                    <span
+                      key={p.id}
+                      className="inline-block bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 mr-1.5 text-[11px] whitespace-nowrap font-mono"
+                    >
+                      {p.payment_method}: {formatMoney(p.amount_minor)}
+                    </span>
+                  ))}
+                </td>
+              </>
+            );
+          }}
+        />
+      )}
+
+      {/* Tab 2: Returns & Refunds Details */}
+      {salesSubTab === 'returns' && (
+        <ReportTable
+          headers={[
+            'Return #',
+            'Date & Time',
+            'Invoice #',
+            'Customer',
+            'Items Returned',
+            'Reason',
+            'Refund Method',
+            { label: 'Refund Amount', align: 'right' },
+          ]}
+          rows={data.returns || []}
+          renderRow={(ret) => (
+            <>
+              <td className="py-3.5 px-4 font-semibold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                {ret.return_number}
+              </td>
+              <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{ret.created_at}</td>
+              <td className="py-3.5 px-4 font-semibold text-brand-600 dark:text-brand-400 whitespace-nowrap">
+                {ret.invoice_number}
+              </td>
+              <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                {ret.customer_name || 'Walk-in Customer'}
+              </td>
+              <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300 max-w-xs truncate" title={ret.items_summary}>
+                {ret.items_summary || '—'}
+              </td>
+              <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                {ret.reason || '—'}
+              </td>
+              <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                <Badge variant="outline">
+                  {ret.refund_method}
+                </Badge>
+              </td>
+              <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap font-bold text-rose-600 dark:text-rose-400">
+                -{formatMoney(ret.refund_amount_minor)}
+              </td>
+            </>
+          )}
+        />
+      )}
+
+      {/* Tab 3: Exchanges Details */}
+      {salesSubTab === 'exchanges' && (
+        <ReportTable
+          headers={[
+            'Exchange #',
+            'Date & Time',
+            'Invoice #',
+            'Customer',
+            { label: 'Return Total', align: 'right' },
+            { label: 'Replacement', align: 'right' },
+            { label: 'Difference (+/-)', align: 'right' },
+            'Settlement',
+            'Reason',
+          ]}
+          rows={data.exchanges || []}
+          renderRow={(exc) => (
+            <>
+              <td className="py-3.5 px-4 font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                {exc.exchange_number}
+              </td>
+              <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{exc.created_at}</td>
+              <td className="py-3.5 px-4 font-semibold text-brand-600 dark:text-brand-400 whitespace-nowrap">
+                {exc.invoice_number}
+              </td>
+              <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                {exc.customer_name || 'Walk-in Customer'}
+              </td>
+              <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap text-slate-600 dark:text-slate-300">
+                {formatMoney(exc.return_total_minor)}
+              </td>
+              <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap text-slate-600 dark:text-slate-300">
+                {formatMoney(exc.replacement_total_minor)}
+              </td>
+              <td className="py-3.5 px-4 text-right font-mono whitespace-nowrap font-bold">
+                {exc.difference_minor > 0 ? (
+                  <span className="text-emerald-600 dark:text-emerald-400">+{formatMoney(exc.difference_minor)}</span>
+                ) : exc.difference_minor < 0 ? (
+                  <span className="text-rose-600 dark:text-rose-400">-{formatMoney(Math.abs(exc.difference_minor))}</span>
+                ) : (
+                  <span className="text-slate-500 dark:text-slate-400">Rs. 0.00</span>
+                )}
+              </td>
+              <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                <Badge variant="outline">
+                  {exc.settlement_method}
+                </Badge>
+              </td>
+              <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                {exc.reason || '—'}
+              </td>
+            </>
+          )}
+        />
+      )}
     </div>
   );
 }

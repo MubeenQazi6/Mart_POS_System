@@ -48,6 +48,11 @@ export interface SaleRow {
   items?: SaleItemRow[];
   payments?: SalePaymentRow[];
   customer_name?: string | null;
+  returned_amount_minor?: number;
+  net_realized_minor?: number;
+  has_returns?: boolean;
+  has_exchanges?: boolean;
+  exchange_difference_minor?: number;
 }
 
 export interface SaleItemRow {

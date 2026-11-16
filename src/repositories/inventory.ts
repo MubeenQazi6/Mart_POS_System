@@ -11,6 +11,7 @@ import {
 } from '../database/schema/index';
 import { eq, and, or, like, desc, gte, lte, sql } from 'drizzle-orm';
 import { logAuditEvent } from './audit';
+import { getSetting } from './settings';
 import type {
   StockSummaryFilters,
   StockSummaryRow,
@@ -25,8 +26,7 @@ import type {
 /** Stock balance subquery: IN sum − OUT sum per variant (quantity scaled ×1000). */
 const currentStockExpr = sql<number>`coalesce((
   select
-    sum(case when ${stockMovements.movement_type} = 'IN' then ${stockMovements.quantity} else 0 end)
-    - sum(case when ${stockMovements.movement_type} = 'OUT' then ${stockMovements.quantity} else 0 end)
+    sum(case when ${stockMovements.movement_type} = 'IN' then ${stockMovements.quantity} else -${stockMovements.quantity} end)
   from ${stockMovements}
   where ${stockMovements.variant_id} = ${productVariants.id}
 ), 0)`.mapWith(Number);
@@ -62,7 +62,17 @@ function mapAdjustmentToMovement(
     case 'opening_stock':
       return { movement_type: 'IN', reference_type: 'OPENING_STOCK' };
     case 'return':
+      if (direction === 'in') {
+        return { movement_type: 'IN', reference_type: 'RETURN' };
+      }
       return { movement_type: 'OUT', reference_type: 'RETURN' };
+    case 'customer_return':
+      if (direction === 'out') {
+        return { movement_type: 'OUT', reference_type: 'RETURN' };
+      }
+      return { movement_type: 'IN', reference_type: 'RETURN' };
+    case 'supplier_return':
+      return { movement_type: 'OUT', reference_type: 'SUPPLIER_RETURN' };
     case 'exchange_out':
       return { movement_type: 'OUT', reference_type: 'EXCHANGE_OUT' };
     case 'exchange_in':
@@ -385,7 +395,11 @@ export function createMovement(input: CreateMovementInput): StockMovementRow {
 
     beforeStock = variant.available_stock;
 
+    const allowNegativeStock = Boolean(getSetting('pos.allow_negative_stock'));
     if (movement_type === 'OUT') {
+      if (!allowNegativeStock && quantity > beforeStock) {
+        throw new Error(`Cannot reduce stock below 0. Available: ${String(beforeStock / 1000)}, Requested: ${String(quantity / 1000)}`);
+      }
       afterStock = beforeStock - quantity;
     } else {
       afterStock = beforeStock + quantity;

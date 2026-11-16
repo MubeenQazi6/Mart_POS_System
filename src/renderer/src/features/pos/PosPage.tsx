@@ -62,6 +62,13 @@ export function PosPage(): React.JSX.Element {
   } = usePosStore();
 
   const [scanQuery, setScanQuery] = useState('');
+  const [autoClearSearch, setAutoClearSearch] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('pos_auto_clear_search') !== 'false';
+    } catch {
+      return true;
+    }
+  });
   const [catalogProducts, setCatalogProducts] = useState<ProductRow[]>([]);
   const [transactionQuery, setTransactionQuery] = useState('');
   const [transactionResults, setTransactionResults] = useState<SaleRow[]>([]);
@@ -142,6 +149,17 @@ export function PosPage(): React.JSX.Element {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
+      // If Enter is pressed and the scan input is NOT currently focused,
+      // redirect focus to scan input to prevent the Enter key (from barcode scanner)
+      // from accidentally triggering whichever button/element has focus (e.g. cart minus button).
+      if (e.key === 'Enter' && !isPaymentModalOpen && !isReceiptModalOpen && !isManualAddModalOpen && !isHistoryModalOpen) {
+        const active = document.activeElement;
+        if (active !== scanInputRef.current) {
+          e.preventDefault();
+          scanInputRef.current?.focus();
+          return;
+        }
+      }
       // F2: Focus scanner
       if (e.key === 'F2') {
         e.preventDefault();
@@ -238,9 +256,13 @@ export function PosPage(): React.JSX.Element {
     [scanQuery],
   );
 
-  // Search catalog when query changes
+  // Debounced catalog search when query changes (300ms delay)
+  // Prevents barcode scanners from firing 13+ heavy search queries per scan
   useEffect(() => {
-    refreshCatalog(scanQuery);
+    const timer = setTimeout(() => {
+      refreshCatalog(scanQuery);
+    }, 300);
+    return () => clearTimeout(timer);
   }, [scanQuery, refreshCatalog]);
 
   // Refresh catalog after a sale is completed so stock levels update instantly
@@ -374,7 +396,9 @@ export function PosPage(): React.JSX.Element {
         const v = prod.variants[0];
         if (v) {
           handleSelectVariant(prod, v);
-          setScanQuery('');
+          if (autoClearSearch) {
+            setScanQuery('');
+          }
           scanInputRef.current?.focus();
         }
       }
@@ -418,6 +442,9 @@ export function PosPage(): React.JSX.Element {
       is_out_of_stock: isManual || ((variant.available_stock ?? 0) <= 0),
       quantity: customQuantity,
     });
+    if (autoClearSearch && scanQuery) {
+      setScanQuery('');
+    }
     scanInputRef.current?.focus();
   };
 
@@ -770,9 +797,31 @@ export function PosPage(): React.JSX.Element {
                 void handleScannerSubmit(e);
               }}
             >
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Barcode Scanner / Product Search (F2)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="barcode-scanner-input" className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Barcode Scanner / Product Search (F2)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextVal = !autoClearSearch;
+                    setAutoClearSearch(nextVal);
+                    try {
+                      localStorage.setItem('pos_auto_clear_search', String(nextVal));
+                    } catch {}
+                    showToast('info', `Search auto-clear ${nextVal ? 'enabled' : 'disabled'}`);
+                  }}
+                  title={autoClearSearch ? 'Auto-clear is ENABLED: Search bar clears after adding product. Click to disable.' : 'Auto-clear is DISABLED: Search text stays in search bar. Click to enable.'}
+                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors border shadow-2xs ${
+                    autoClearSearch
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800'
+                      : 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                  }`}
+                >
+                  <span className={`inline-block w-2 h-2 rounded-full ${autoClearSearch ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                  <span>Auto-clear: {autoClearSearch ? 'ON' : 'OFF'}</span>
+                </button>
+              </div>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                   <Barcode className="h-5 w-5 text-brand-600 dark:text-brand-400" />
@@ -1562,11 +1611,7 @@ export function PosPage(): React.JSX.Element {
           defaultActionMode={returnActionMode}
           onComplete={() => {
             // Refresh product catalog stock immediately
-            if (window.martpos) {
-              void window.martpos.products.list({ is_active: true }).then((res) => {
-                if (res.success) setCatalogProducts(res.data.slice(0, 24));
-              });
-            }
+            refreshCatalog(scanQuery);
           }}
         />
       )}

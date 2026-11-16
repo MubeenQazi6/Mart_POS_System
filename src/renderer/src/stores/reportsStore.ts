@@ -163,21 +163,24 @@ export const useReportsStore = create<ReportsState>((set, get) => ({
 
     if (activeReport === 'sales' && salesData) {
       title = 'Sales_Report';
+      const gross = salesData.summary.gross_sales_minor ?? salesData.summary.net_sales_minor;
+      const returns = salesData.summary.returns_refunded_minor ?? 0;
       summaryLines = [
         { label: 'Total Invoices', value: String(salesData.summary.total_sales_count) },
-        { label: 'Net Sales', value: `Rs. ${(salesData.summary.net_sales_minor / 100).toFixed(2)}` },
-        { label: 'Cash Collected', value: `Rs. ${(salesData.summary.cash_collected_minor / 100).toFixed(2)}` },
+        { label: 'Gross Sales', value: `Rs. ${(gross / 100).toFixed(2)}` },
+        { label: 'Returns Refunded', value: `-Rs. ${(returns / 100).toFixed(2)} (${salesData.summary.total_returns_count || 0} returns)` },
+        { label: 'Net Sales Revenue', value: `Rs. ${(salesData.summary.net_sales_minor / 100).toFixed(2)}` },
+        { label: 'Cash Collected (Net)', value: `Rs. ${(salesData.summary.cash_collected_minor / 100).toFixed(2)}` },
         { label: 'Khata Credit', value: `Rs. ${(salesData.summary.credit_generated_minor / 100).toFixed(2)}` },
       ];
-      headers = ['Invoice #', 'Date / Time', 'Status', 'Subtotal', 'Discount', 'Tax', 'Total Amount', 'Payments'];
+      headers = ['Invoice #', 'Date / Time', 'Status', 'Gross Total', 'Returns Deducted', 'Net Realized', 'Payments'];
       rows = salesData.rows.map((r) => [
         r.invoice_number,
         r.created_at,
         r.status,
-        (r.subtotal_minor / 100).toFixed(2),
-        (r.discount_minor / 100).toFixed(2),
-        (r.tax_minor / 100).toFixed(2),
         (r.total_minor / 100).toFixed(2),
+        r.returned_amount_minor && r.returned_amount_minor > 0 ? `-${(r.returned_amount_minor / 100).toFixed(2)}` : '0.00',
+        ((r.net_realized_minor ?? (r.total_minor - (r.returned_amount_minor || 0))) / 100).toFixed(2),
         r.payments?.map((p) => `${p.payment_method}: Rs. ${(p.amount_minor / 100).toFixed(2)}`).join(' | ') || '—',
       ]);
     } else if (activeReport === 'purchases' && purchasesData) {

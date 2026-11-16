@@ -1,6 +1,13 @@
 import { getDb } from '../database/client/index';
 import { withTransaction } from './base';
-import { suppliers, supplierTransactions, cashSessions, cashMovements } from '../database/schema/index';
+import {
+  suppliers,
+  supplierTransactions,
+  cashSessions,
+  cashMovements,
+  purchases,
+  purchasePayments,
+} from '../database/schema/index';
 import { eq, and, like, desc, or } from 'drizzle-orm';
 import { logAuditEvent } from './audit';
 import type {
@@ -10,6 +17,7 @@ import type {
   SupplierSearchParams,
   SupplierTransactionRow,
   RecordSupplierPaymentInput,
+  PaymentStatus,
 } from '@shared/types/purchases';
 
 export function listSuppliers(params: SupplierSearchParams = {}): SupplierRow[] {
@@ -149,6 +157,43 @@ export function recordSupplierPayment(input: RecordSupplierPaymentInput): void {
       throw new Error(`Supplier with ID ${String(input.supplier_id)} not found`);
     }
 
+    let purchaseRecord = null;
+    if (input.purchase_id) {
+      purchaseRecord = tx.select().from(purchases).where(eq(purchases.id, input.purchase_id)).get();
+      if (!purchaseRecord) {
+        throw new Error(`Purchase order with ID ${String(input.purchase_id)} not found`);
+      }
+      if (purchaseRecord.supplier_id !== input.supplier_id) {
+        throw new Error(`Purchase order #${purchaseRecord.purchase_number} does not belong to this supplier`);
+      }
+
+      // Update purchase record paid amount, balance, and payment status
+      const newPaidAmount = purchaseRecord.paid_amount_minor + input.amount_minor;
+      const newBalance = Math.max(0, purchaseRecord.total_minor - newPaidAmount);
+      const newPaymentStatus: PaymentStatus =
+        newPaidAmount >= purchaseRecord.total_minor ? 'paid' : newPaidAmount > 0 ? 'partial' : 'unpaid';
+
+      tx.update(purchases)
+        .set({
+          paid_amount_minor: newPaidAmount,
+          balance_minor: newBalance,
+          payment_status: newPaymentStatus,
+        })
+        .where(eq(purchases.id, input.purchase_id))
+        .run();
+
+      // Record in purchase_payments table
+      tx.insert(purchasePayments).values({
+        purchase_id: input.purchase_id,
+        supplier_id: input.supplier_id,
+        payment_method: input.payment_method,
+        amount_minor: input.amount_minor,
+        reference_number: input.reference_number?.trim() || null,
+        notes: input.notes?.trim() || `Payment recorded from supplier ledger`,
+        created_at: new Date().toISOString(),
+      }).run();
+    }
+
     // Payment reduces what we owe to supplier (decrements current_balance_minor)
     const newBalance = supplier.current_balance_minor - input.amount_minor;
 
@@ -160,13 +205,19 @@ export function recordSupplierPayment(input: RecordSupplierPaymentInput): void {
       .where(eq(suppliers.id, input.supplier_id))
       .run();
 
+    const paymentNote =
+      input.notes?.trim() ||
+      `Payment via ${input.payment_method}${input.reference_number ? ` (Ref: ${input.reference_number})` : ''}${
+        purchaseRecord ? ` for PO ${purchaseRecord.purchase_number}` : ''
+      }`;
+
     tx.insert(supplierTransactions).values({
       supplier_id: input.supplier_id,
       transaction_type: 'PAYMENT',
       amount_minor: -input.amount_minor, // Negative in ledger to represent payment reducing balance
-      reference_type: 'PAYMENT',
+      reference_type: purchaseRecord ? 'PURCHASE' : 'PAYMENT',
       reference_id: input.purchase_id || null,
-      notes: input.notes?.trim() || `Payment via ${input.payment_method}${input.reference_number ? ` (Ref: ${input.reference_number})` : ''}`,
+      notes: paymentNote,
     }).run();
 
     if (input.payment_method === 'cash') {
@@ -176,9 +227,9 @@ export function recordSupplierPayment(input: RecordSupplierPaymentInput): void {
           session_id: session.id,
           movement_type: 'SUPPLIER_PAYMENT',
           amount_minor: input.amount_minor,
-          reference_type: 'SUPPLIER',
-          reference_id: input.supplier_id,
-          description: input.notes?.trim() || `Payment to supplier ${supplier.name}`
+          reference_type: purchaseRecord ? 'PURCHASE' : 'SUPPLIER',
+          reference_id: input.purchase_id || input.supplier_id,
+          description: paymentNote,
         }).run();
       }
     }
@@ -187,6 +238,8 @@ export function recordSupplierPayment(input: RecordSupplierPaymentInput): void {
   logAuditEvent({
     event_type: 'SUPPLIER_PAYMENT',
     status: 'SUCCESS',
-    details: `Recorded payment of ${String(input.amount_minor)} minor for supplier #${String(input.supplier_id)} via ${input.payment_method}`,
+    details: `Recorded payment of ${String(input.amount_minor)} minor for supplier #${String(input.supplier_id)}${
+      input.purchase_id ? ` against purchase #${String(input.purchase_id)}` : ''
+    } via ${input.payment_method}`,
   });
 }

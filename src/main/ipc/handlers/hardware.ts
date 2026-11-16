@@ -224,17 +224,24 @@ export function registerHardwareIpcHandlers(): void {
           // Extra settle time for fonts and SVG layout to complete
           await new Promise<void>((res) => setTimeout(res, 500));
 
+          const isLabel = options?.printerType === 'label';
+          const customPageSize =
+            options?.pageSize || (isLabel ? { width: 50000, height: 25000 } : undefined);
+
           return new Promise<Result<PrintSilentResult>>((resolve) => {
+            const printOptions: Electron.WebContentsPrintOptions = {
+              silent: true,
+              printBackground: true,
+              deviceName: configuredPrinter || undefined,
+              copies,
+              margins: { marginType: 'none' },
+              ...(customPageSize
+                ? { pageSize: customPageSize }
+                : { usePrinterDefaultPageSize: !configuredPrinter }),
+            };
+
             printWindow.webContents.print(
-              {
-                silent: true,
-                printBackground: true,
-                deviceName: configuredPrinter || undefined,
-                copies,
-                margins: { marginType: 'none' },
-                // Use printer's own default page size when no explicit deviceName override
-                usePrinterDefaultPageSize: !configuredPrinter,
-              },
+              printOptions,
               (success, failureReason) => {
                 try {
                   printWindow.close();

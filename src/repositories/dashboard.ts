@@ -1,5 +1,18 @@
 import { getDb } from '../database/client/index';
-import { sales, saleItems, salePayments, products, productVariants, customers, suppliers, purchases, salesReturns, purchaseReturns } from '../database/schema/index';
+import {
+  sales,
+  saleItems,
+  salePayments,
+  products,
+  productVariants,
+  customers,
+  suppliers,
+  purchases,
+  salesReturns,
+  salesReturnItems,
+  salesExchanges,
+  purchaseReturns,
+} from '../database/schema/index';
 import { eq, and, gte, lte, desc, sql, type AnyColumn } from 'drizzle-orm';
 import { listStockSummary } from './inventory';
 import { getExpenseTotalForRange } from './expenses';
@@ -59,19 +72,76 @@ function getDateConditions(column: AnyColumn, date_from?: string, date_to?: stri
   return date_from && date_to ? [gte(column, date_from), lte(column, dateToEndOfDay(date_to) as string)] : [];
 }
 
-function getSalesSummary(date_from?: string, date_to?: string): { revenue: number; count: number; grossProfit: number } {
+export function getSalesSummary(date_from?: string, date_to?: string): { revenue: number; count: number; grossProfit: number } {
   const db = getDb();
-  const rows = db.select({ id: sales.id, total_minor: sales.total_minor }).from(sales).where(and(eq(sales.status, 'completed'), ...getDateConditions(sales.created_at, date_from, date_to))).all();
+  const rows = db
+    .select({ id: sales.id, total_minor: sales.total_minor })
+    .from(sales)
+    .where(and(eq(sales.status, 'completed'), ...getDateConditions(sales.created_at, date_from, date_to)))
+    .all();
+
   let grossProfit = 0;
   for (const sale of rows) {
-    const items = db.select({ quantity: saleItems.quantity, line_total_minor: saleItems.line_total_minor, unit_cost_minor: saleItems.unit_cost_minor }).from(saleItems).where(eq(saleItems.sale_id, sale.id)).all();
-    for (const item of items) grossProfit += item.line_total_minor - Math.round((item.quantity * item.unit_cost_minor) / 1000);
+    const items = db
+      .select({ quantity: saleItems.quantity, line_total_minor: saleItems.line_total_minor, unit_cost_minor: saleItems.unit_cost_minor })
+      .from(saleItems)
+      .where(eq(saleItems.sale_id, sale.id))
+      .all();
+    for (const item of items) {
+      grossProfit += item.line_total_minor - Math.round((item.quantity * item.unit_cost_minor) / 1000);
+    }
   }
-  return { revenue: rows.reduce((sum, sale) => sum + sale.total_minor, 0), count: rows.length, grossProfit };
+
+  const grossRevenue = rows.reduce((sum, sale) => sum + sale.total_minor, 0);
+
+  // Deduct sales returns in this period
+  const returns = db
+    .select({ id: salesReturns.id, refund_amount_minor: salesReturns.refund_amount_minor })
+    .from(salesReturns)
+    .where(and(...getDateConditions(salesReturns.created_at, date_from, date_to)))
+    .all();
+
+  const totalReturnRefund = returns.reduce((sum, r) => sum + r.refund_amount_minor, 0);
+
+  // Deduct return profit: returned items reverse the gross profit
+  for (const r of returns) {
+    const returnItems = db
+      .select({
+        quantity: salesReturnItems.quantity,
+        refund_amount_minor: salesReturnItems.refund_amount_minor,
+        unit_price_minor: salesReturnItems.unit_price_minor,
+        purchase_price_minor: productVariants.purchase_price_minor,
+      })
+      .from(salesReturnItems)
+      .innerJoin(productVariants, eq(salesReturnItems.variant_id, productVariants.id))
+      .where(eq(salesReturnItems.return_id, r.id))
+      .all();
+
+    for (const ri of returnItems) {
+      const returnedCost = Math.round((ri.quantity * ri.purchase_price_minor) / 1000);
+      grossProfit -= (ri.refund_amount_minor - returnedCost);
+    }
+  }
+
+  // Account for sales exchanges in this period (>0 customer paid extra, <0 store refunded)
+  const exchanges = db
+    .select({ difference_minor: salesExchanges.difference_minor })
+    .from(salesExchanges)
+    .where(and(...getDateConditions(salesExchanges.created_at, date_from, date_to)))
+    .all();
+
+  const netExchangeDiff = exchanges.reduce((sum, e) => sum + e.difference_minor, 0);
+
+  const netRevenue = Math.max(0, grossRevenue - totalReturnRefund + netExchangeDiff);
+  return { revenue: netRevenue, count: rows.length, grossProfit: Math.max(0, grossProfit) };
 }
 
 function getPurchaseSummary(date_from?: string, date_to?: string): { total: number; count: number } {
-  const row = getDb().select({ total: sql<number>`COALESCE(sum(${purchases.total_minor}), 0)`, count: sql<number>`count(*)` }).from(purchases).where(and(...getDateConditions(purchases.created_at, date_from, date_to))).get();
+  const row = getDb()
+    .select({ total: sql<number>`COALESCE(sum(${purchases.total_minor}), 0)`, count: sql<number>`count(*)` })
+    .from(purchases)
+    .where(and(...getDateConditions(purchases.created_at, date_from, date_to)))
+    .get();
   return { total: Number(row?.total ?? 0), count: Number(row?.count ?? 0) };
 }
 
@@ -86,9 +156,17 @@ export function getDashboardKpis(input: DashboardKpiInput = {}): DashboardKpis {
   const todayPurchaseSummary = getPurchaseSummary(today, today);
   const expenseMinor = getExpenseTotalMinor(date_from, date_to);
   const stockSummary = listStockSummary({ is_active: true });
-  const inventoryValueMinor = stockSummary.reduce((sum, item) => sum + Math.round((item.current_stock * item.purchase_price_minor) / 1000), 0);
-  const lowStockItems = stockSummary.filter((item) => item.stock_status === 'low_stock' || item.stock_status === 'out_of_stock');
-  const visibleLowStockItems = input.low_stock_only ? lowStockItems.filter((item) => item.stock_status === 'low_stock') : lowStockItems;
+  const inventoryValueMinor = stockSummary.reduce(
+    (sum, item) => sum + Math.round((item.current_stock * item.purchase_price_minor) / 1000),
+    0
+  );
+  const lowStockItems = stockSummary.filter(
+    (item) => item.stock_status === 'low_stock' || item.stock_status === 'out_of_stock'
+  );
+  const visibleLowStockItems = input.low_stock_only
+    ? lowStockItems.filter((item) => item.stock_status === 'low_stock')
+    : lowStockItems;
+
   const customerReceivables = db
     .select({ current_balance_minor: customers.current_balance_minor })
     .from(customers)
@@ -102,8 +180,18 @@ export function getDashboardKpis(input: DashboardKpiInput = {}): DashboardKpis {
     .where(eq(suppliers.is_active, true))
     .all()
     .reduce((sum, row) => sum + Math.max(0, row.current_balance_minor), 0);
-  const salesReturnSummary = db.select({ amount: sql<number>`COALESCE(sum(${salesReturns.refund_amount_minor}), 0)`, count: sql<number>`count(*)` }).from(salesReturns).where(and(...getDateConditions(salesReturns.created_at, date_from, date_to))).get();
-  const purchaseReturnSummary = db.select({ amount: sql<number>`COALESCE(sum(${purchaseReturns.refund_amount_minor}), 0)`, count: sql<number>`count(*)` }).from(purchaseReturns).where(and(...getDateConditions(purchaseReturns.created_at, date_from, date_to))).get();
+
+  const salesReturnSummary = db
+    .select({ amount: sql<number>`COALESCE(sum(${salesReturns.refund_amount_minor}), 0)`, count: sql<number>`count(*)` })
+    .from(salesReturns)
+    .where(and(...getDateConditions(salesReturns.created_at, date_from, date_to)))
+    .get();
+
+  const purchaseReturnSummary = db
+    .select({ amount: sql<number>`COALESCE(sum(${purchaseReturns.refund_amount_minor}), 0)`, count: sql<number>`count(*)` })
+    .from(purchaseReturns)
+    .where(and(...getDateConditions(purchaseReturns.created_at, date_from, date_to)))
+    .get();
 
   return {
     sales_revenue_minor: salesSummary.revenue,
@@ -141,6 +229,7 @@ export function getDashboardKpis(input: DashboardKpiInput = {}): DashboardKpis {
 export function getSalesTrend(input: DashboardQuery = {}): DashboardSalesTrendPoint[] {
   const { date_from, date_to } = normalizeDateRange(input);
   const db = getDb();
+
   const rows = db
     .select({
       day: sql<string>`date(${sales.created_at})`,
@@ -153,12 +242,49 @@ export function getSalesTrend(input: DashboardQuery = {}): DashboardSalesTrendPo
     .orderBy(sql`date(${sales.created_at})`)
     .all();
 
-  return rows.map((row) => ({
-    date: String(row.day),
-    sales_revenue_minor: Number(row.total),
-    invoice_count: Number(row.count),
-    gross_profit_minor: getSalesSummary(String(row.day), String(row.day)).grossProfit,
-  }));
+  const returnRows = db
+    .select({
+      day: sql<string>`date(${salesReturns.created_at})`,
+      total: sql<number>`COALESCE(sum(${salesReturns.refund_amount_minor}), 0)`,
+    })
+    .from(salesReturns)
+    .where(and(...(date_from && date_to ? [gte(salesReturns.created_at, date_from), lte(salesReturns.created_at, dateToEndOfDay(date_to) as string)] : [])))
+    .groupBy(sql`date(${salesReturns.created_at})`)
+    .all();
+
+  const returnMap = new Map<string, number>();
+  for (const r of returnRows) {
+    returnMap.set(String(r.day), Number(r.total));
+  }
+
+  const exchangeRows = db
+    .select({
+      day: sql<string>`date(${salesExchanges.created_at})`,
+      diff: sql<number>`COALESCE(sum(${salesExchanges.difference_minor}), 0)`,
+    })
+    .from(salesExchanges)
+    .where(and(...(date_from && date_to ? [gte(salesExchanges.created_at, date_from), lte(salesExchanges.created_at, dateToEndOfDay(date_to) as string)] : [])))
+    .groupBy(sql`date(${salesExchanges.created_at})`)
+    .all();
+
+  const exchangeMap = new Map<string, number>();
+  for (const e of exchangeRows) {
+    exchangeMap.set(String(e.day), Number(e.diff));
+  }
+
+  return rows.map((row) => {
+    const day = String(row.day);
+    const dayReturns = returnMap.get(day) ?? 0;
+    const dayExchanges = exchangeMap.get(day) ?? 0;
+    const netDaySales = Math.max(0, Number(row.total) - dayReturns + dayExchanges);
+    const daySummary = getSalesSummary(day, day);
+    return {
+      date: day,
+      sales_revenue_minor: netDaySales,
+      invoice_count: Number(row.count),
+      gross_profit_minor: daySummary.grossProfit,
+    };
+  });
 }
 
 export function getTopProducts(input: DashboardQuery = {}): DashboardTopProduct[] {
@@ -166,6 +292,7 @@ export function getTopProducts(input: DashboardQuery = {}): DashboardTopProduct[
   const db = getDb();
   const rows = db
     .select({
+      variant_id: productVariants.id,
       product_name: products.name,
       variant_name: productVariants.variant_name,
       quantity_sold: sql<number>`sum(${saleItems.quantity})`,
@@ -177,18 +304,52 @@ export function getTopProducts(input: DashboardQuery = {}): DashboardTopProduct[
     .innerJoin(productVariants, eq(saleItems.variant_id, productVariants.id))
     .innerJoin(products, eq(productVariants.product_id, products.id))
     .where(and(eq(sales.status, 'completed'), ...(date_from && date_to ? [gte(sales.created_at, date_from), lte(sales.created_at, dateToEndOfDay(date_to) as string)] : [])))
-    .groupBy(products.name, productVariants.variant_name)
-    .orderBy(desc(sql`sum(${saleItems.line_total_minor})`))
-    .limit(input.limit && input.limit > 0 ? input.limit : 5)
+    .groupBy(productVariants.id)
     .all();
 
-  return rows.map((row) => ({
-    product_name: String(row.product_name),
-    variant_name: String(row.variant_name),
-    quantity_sold: Number(row.quantity_sold),
-    revenue_minor: Number(row.revenue_minor),
-    gross_profit_minor: Number(row.gross_profit_minor),
-  }));
+  // Deduct returned items in this period
+  const returnItemRows = db
+    .select({
+      variant_id: salesReturnItems.variant_id,
+      quantity: sql<number>`sum(${salesReturnItems.quantity})`,
+      refund_amount_minor: sql<number>`sum(${salesReturnItems.refund_amount_minor})`,
+      cost_minor: sql<number>`sum(round(${salesReturnItems.quantity} * ${productVariants.purchase_price_minor} / 1000))`,
+    })
+    .from(salesReturnItems)
+    .innerJoin(salesReturns, eq(salesReturnItems.return_id, salesReturns.id))
+    .innerJoin(productVariants, eq(salesReturnItems.variant_id, productVariants.id))
+    .where(and(...(date_from && date_to ? [gte(salesReturns.created_at, date_from), lte(salesReturns.created_at, dateToEndOfDay(date_to) as string)] : [])))
+    .groupBy(salesReturnItems.variant_id)
+    .all();
+
+  const returnItemMap = new Map<number, { qty: number; revenue: number; cost: number }>();
+  for (const r of returnItemRows) {
+    returnItemMap.set(Number(r.variant_id), {
+      qty: Number(r.quantity),
+      revenue: Number(r.refund_amount_minor),
+      cost: Number(r.cost_minor),
+    });
+  }
+
+  const netList: DashboardTopProduct[] = rows.map((row) => {
+    const ret = returnItemMap.get(Number(row.variant_id));
+    const netQty = Math.max(0, Number(row.quantity_sold) - (ret?.qty ?? 0));
+    const netRev = Math.max(0, Number(row.revenue_minor) - (ret?.revenue ?? 0));
+    const returnProfit = (ret?.revenue ?? 0) - (ret?.cost ?? 0);
+    const netGross = Math.max(0, Number(row.gross_profit_minor) - returnProfit);
+
+    return {
+      product_name: String(row.product_name),
+      variant_name: String(row.variant_name),
+      quantity_sold: netQty,
+      revenue_minor: netRev,
+      gross_profit_minor: netGross,
+    };
+  });
+
+  return netList
+    .sort((a, b) => b.revenue_minor - a.revenue_minor)
+    .slice(0, input.limit && input.limit > 0 ? input.limit : 5);
 }
 
 export function getPaymentBreakdown(input: DashboardQuery = {}): DashboardPaymentBreakdown {
@@ -207,6 +368,35 @@ export function getPaymentBreakdown(input: DashboardQuery = {}): DashboardPaymen
     else if (payment.payment_method === 'card') breakdown.card_minor += Number(payment.amount_minor);
     else if (payment.payment_method === 'credit') breakdown.credit_minor += Number(payment.amount_minor);
   }
+
+  // Deduct refunds from sales returns
+  const returnRefunds = db
+    .select({ refund_method: salesReturns.refund_method, refund_amount_minor: salesReturns.refund_amount_minor })
+    .from(salesReturns)
+    .where(and(...(date_from && date_to ? [gte(salesReturns.created_at, date_from), lte(salesReturns.created_at, dateToEndOfDay(date_to) as string)] : [])))
+    .all();
+
+  for (const ret of returnRefunds) {
+    const amt = Number(ret.refund_amount_minor);
+    if (ret.refund_method === 'cash') breakdown.cash_minor = Math.max(0, breakdown.cash_minor - amt);
+    else if (ret.refund_method === 'card') breakdown.card_minor = Math.max(0, breakdown.card_minor - amt);
+    else if (ret.refund_method === 'credit') breakdown.credit_minor = Math.max(0, breakdown.credit_minor - amt);
+  }
+
+  // Account for sales exchanges
+  const exchanges = db
+    .select({ settlement_method: salesExchanges.settlement_method, difference_minor: salesExchanges.difference_minor })
+    .from(salesExchanges)
+    .where(and(...(date_from && date_to ? [gte(salesExchanges.created_at, date_from), lte(salesExchanges.created_at, dateToEndOfDay(date_to) as string)] : [])))
+    .all();
+
+  for (const exc of exchanges) {
+    const diff = Number(exc.difference_minor);
+    if (exc.settlement_method === 'cash') breakdown.cash_minor = Math.max(0, breakdown.cash_minor + diff);
+    else if (exc.settlement_method === 'card') breakdown.card_minor = Math.max(0, breakdown.card_minor + diff);
+    else if (exc.settlement_method === 'credit') breakdown.credit_minor = Math.max(0, breakdown.credit_minor + diff);
+  }
+
   breakdown.split_minor = breakdown.cash_minor + breakdown.card_minor + breakdown.credit_minor;
   return breakdown;
 }

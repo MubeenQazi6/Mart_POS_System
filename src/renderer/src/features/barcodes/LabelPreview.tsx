@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import JsBarcode from 'jsbarcode';
-import { formatMoneyFromMinor } from '@shared/utils/format';
 
 export interface LabelPreviewProps {
   productName: string;
@@ -32,7 +31,6 @@ export function LabelPreview({
     if (!svgRef.current || !barcode) return;
 
     try {
-      // Determine format for JsBarcode
       let format = 'CODE128';
       if (barcodeType === 'EAN13' || (barcode.length === 13 && /^\d+$/.test(barcode))) {
         format = 'EAN13';
@@ -40,70 +38,89 @@ export function LabelPreview({
 
       JsBarcode(svgRef.current, barcode, {
         format,
-        width: 1.6,
-        height: 48,
+        width: 1.3,
+        height: 28,
         displayValue: true,
-        fontSize: 12,
-        font: 'monospace',
-        fontOptions: 'bold',
-        textMargin: 3,
-        margin: 4,
+        fontSize: 8.5,
+        font: 'Arial, sans-serif',
+        fontOptions: '',
+        textMargin: 1,
+        margin: 0,
         background: '#ffffff',
-        lineColor: '#0f172a',
+        lineColor: '#000000',
       });
+      svgRef.current.setAttribute('shape-rendering', 'crispEdges');
     } catch {
-      // Fallback to Code128 if EAN13 check digit fails in preview
       try {
         JsBarcode(svgRef.current, barcode, {
           format: 'CODE128',
-          width: 1.4,
-          height: 48,
+          width: 1.2,
+          height: 28,
           displayValue: true,
-          fontSize: 11,
-          margin: 4,
+          fontSize: 8.5,
+          font: 'Arial, sans-serif',
+          fontOptions: '',
+          textMargin: 1,
+          margin: 0,
+          background: '#ffffff',
+          lineColor: '#000000',
         });
+        svgRef.current.setAttribute('shape-rendering', 'crispEdges');
       } catch {
         // Leave empty if completely unrenderable
       }
     }
   }, [barcode, barcodeType]);
 
+  const displayName =
+    variantName && variantName !== 'Standard' && variantName !== 'Default'
+      ? `${productName} (${variantName})`
+      : productName;
+
+  const priceValue = (sellingPriceMinor / 100).toLocaleString('en-PK', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   return (
-    <div
-      className={`inline-block w-64 rounded-xl border-2 border-dashed border-slate-300 bg-white p-4 text-center shadow-sm dark:border-slate-600 dark:bg-slate-100 ${className}`}
-    >
-      {/* Store Branding */}
-      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-        {storeName}
-      </div>
+    <div className="flex flex-col items-center gap-1.5">
+      <div
+        className={`relative flex flex-col justify-between items-center text-center bg-white text-black rounded-lg border border-slate-300 shadow-md p-2 w-[260px] h-[130px] overflow-hidden select-none font-sans ${className}`}
+        style={{ aspectRatio: '2 / 1' }}
+      >
+        {/* Store Branding */}
+        <div className="w-full text-[9px] font-bold uppercase tracking-wider text-black truncate leading-tight">
+          {storeName}
+        </div>
 
-      {/* Product Title */}
-      <div className="mt-1 line-clamp-2 text-sm font-bold text-slate-900 leading-snug">
-        {productName}
-      </div>
+        {/* Product Title */}
+        <div className="w-full px-1 text-[10px] font-semibold text-black truncate leading-tight">
+          {displayName}
+        </div>
 
-      {/* Variant / Size info */}
-      {variantName && (
-        <div className="mt-0.5 text-xs font-semibold text-brand-700">{variantName}</div>
-      )}
+        {/* Barcode SVG Rendering */}
+        <div className="w-full flex justify-center items-center overflow-hidden my-0.5">
+          {barcode ? (
+            <svg ref={svgRef} className="max-w-[230px] h-[48px] w-auto" />
+          ) : (
+            <div className="flex h-10 w-full items-center justify-center rounded bg-slate-100 text-[10px] font-medium text-slate-400">
+              No barcode assigned
+            </div>
+          )}
+        </div>
 
-      {/* Barcode SVG Rendering */}
-      <div className="my-2 flex justify-center overflow-hidden rounded bg-white">
-        {barcode ? (
-          <svg ref={svgRef} className="max-w-full h-auto" />
-        ) : (
-          <div className="flex h-16 w-full items-center justify-center rounded bg-slate-50 text-xs text-slate-400">
-            No barcode assigned
-          </div>
-        )}
-      </div>
-
-      {/* Selling Price */}
-      <div className="mt-1 border-t border-slate-200 pt-1.5">
-        <div className="text-base font-extrabold text-slate-900">
-          {formatMoneyFromMinor(sellingPriceMinor)}
+        {/* Selling Price */}
+        <div className="w-full flex items-baseline justify-center gap-1 leading-none pb-0.5">
+          <span className="text-[9px] font-bold text-black uppercase">Rs.</span>
+          <span className="text-sm font-bold text-black tracking-normal">
+            {priceValue}
+          </span>
         </div>
       </div>
+      <span className="text-[10px] font-semibold text-slate-400 tracking-wide">
+        50 mm × 25 mm (BarTender Standard)
+      </span>
     </div>
   );
 }
+

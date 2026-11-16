@@ -238,6 +238,13 @@ export function CreatePurchaseModal({
         onSubmit={(e) => {
           void handleSubmit(e);
         }}
+        onKeyDown={(e) => {
+          // Prevent barcode scanner Enter key from accidentally submitting the form.
+          // The user must click the submit button explicitly.
+          if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'BUTTON') {
+            e.preventDefault();
+          }
+        }}
         className="space-y-4"
         noValidate
       >

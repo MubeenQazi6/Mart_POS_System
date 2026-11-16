@@ -12,7 +12,7 @@ import type { PurchaseRow, PaymentStatus } from '@shared/types/purchases';
 import { CreatePurchaseModal } from './CreatePurchaseModal';
 import { PurchaseDetailsModal } from './PurchaseDetailsModal';
 import { ReturnExchangeModal } from '../returns/ReturnExchangeModal';
-import { ShoppingBag, Plus, Search, RefreshCw, Eye, DollarSign, Truck, RotateCcw } from 'lucide-react';
+import { ShoppingBag, Plus, Search, RefreshCw, Eye, DollarSign, Truck, RotateCcw, CheckCircle2 } from 'lucide-react';
 
 function paymentStatusBadge(status: PaymentStatus): {
   variant: 'success' | 'warning' | 'danger';
@@ -99,7 +99,7 @@ export function PurchasesPage(): React.JSX.Element {
       />
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400">
             <ShoppingBag className="h-5 w-5" />
@@ -115,15 +115,29 @@ export function PurchasesPage(): React.JSX.Element {
         </div>
 
         <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
             <DollarSign className="h-5 w-5" />
           </div>
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Total Purchases Value
             </p>
-            <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">
+            <p className="text-xl font-bold text-blue-700 dark:text-blue-400">
               {formatMoney(kpis?.total_purchases_value_minor ?? 0)}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Total Paid Amount
+            </p>
+            <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">
+              {formatMoney(kpis?.total_paid_minor ?? 0)}
             </p>
           </div>
         </div>
@@ -134,7 +148,7 @@ export function PurchasesPage(): React.JSX.Element {
           </div>
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Total Outstanding Payables
+              Outstanding Payables
             </p>
             <p
               className={`text-xl font-bold ${(kpis?.total_payables_minor ?? 0) > 0 ? 'text-red-700 dark:text-red-400' : 'text-slate-800 dark:text-slate-100'}`}

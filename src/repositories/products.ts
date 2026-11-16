@@ -150,6 +150,9 @@ export function createProduct(input: CreateProductInput): ProductRow {
       }).returning({ id: products.id }).get();
 
       for (const vInput of input.variants) {
+        if (vInput.sku) {
+          freeSoftDeletedSku(tx as any, vInput.sku);
+        }
         const variant = tx.insert(productVariants).values({
           product_id: prod.id,
           variant_name: vInput.variant_name,
@@ -163,9 +166,10 @@ export function createProduct(input: CreateProductInput): ProductRow {
 
         if (vInput.barcodes) {
           for (const bInput of vInput.barcodes) {
+            freeSoftDeletedBarcode(tx as any, bInput.barcode);
             tx.insert(productBarcodes).values({
               variant_id: variant.id,
-              barcode: bInput.barcode,
+              barcode: bInput.barcode.trim(),
               barcode_type: bInput.barcode_type,
               is_primary: bInput.is_primary ?? false,
               is_active: true,
@@ -202,6 +206,9 @@ export function updateProduct(input: UpdateProductInput): ProductRow {
 export function createVariant(productId: number, input: CreateVariantInput): ProductVariantRow {
   try {
     const db = getDb();
+    if (input.sku) {
+      freeSoftDeletedSku(db as any, input.sku);
+    }
     const result = db.insert(productVariants).values({
       product_id: productId,
       variant_name: input.variant_name,
@@ -238,6 +245,9 @@ export function createVariant(productId: number, input: CreateVariantInput): Pro
 export function updateVariant(input: UpdateVariantInput): ProductVariantRow {
   try {
     const db = getDb();
+    if (input.sku) {
+      freeSoftDeletedSku(db as any, input.sku);
+    }
     const result = db.update(productVariants).set({
       ...(input.variant_name !== undefined && { variant_name: input.variant_name }),
       ...(input.sku !== undefined && { sku: input.sku }),
@@ -274,9 +284,10 @@ export function updateVariant(input: UpdateVariantInput): ProductVariantRow {
 export function addBarcode(input: AddBarcodeInput): BarcodeRow {
   try {
     const db = getDb();
+    freeSoftDeletedBarcode(db as any, input.barcode);
     const result = db.insert(productBarcodes).values({
       variant_id: input.variant_id,
-      barcode: input.barcode,
+      barcode: input.barcode.trim(),
       barcode_type: input.barcode_type,
       is_primary: input.is_primary ?? false,
       is_active: true,
@@ -293,10 +304,84 @@ export function deactivateBarcode(id: number): void {
 }
 
 /**
+ * If a barcode belongs to a soft-deleted variant/product, append a suffix to free the UNIQUE constraint.
+ */
+function freeSoftDeletedBarcode(dbOrTx: ReturnType<typeof getDb>, barcode: string): void {
+  const clean = barcode.trim();
+  if (!clean) return;
+  const existingBc = dbOrTx.select().from(productBarcodes).where(eq(productBarcodes.barcode, clean)).get();
+  if (existingBc) {
+    const variant = dbOrTx.select().from(productVariants).where(eq(productVariants.id, existingBc.variant_id)).get();
+    const product = variant ? dbOrTx.select().from(products).where(eq(products.id, variant.product_id)).get() : null;
+    const isDeleted = !variant || !variant.is_active || variant.deleted_at !== null || (product && (!product.is_active || product.deleted_at !== null));
+    // Also free the barcode slot if the barcode row itself was deactivated (is_active = false),
+    // regardless of the variant/product status. This allows the same barcode string to be re-added.
+    const isBarcodeDeactivated = !existingBc.is_active;
+    if (isDeleted || isBarcodeDeactivated) {
+      dbOrTx.update(productBarcodes)
+        .set({ barcode: `${clean}_del_${String(existingBc.variant_id)}_${String(Date.now())}`, is_active: false })
+        .where(eq(productBarcodes.id, existingBc.id))
+        .run();
+    }
+  }
+}
+
+/**
+ * If an SKU belongs to a soft-deleted variant/product, append a suffix to free the UNIQUE constraint.
+ */
+function freeSoftDeletedSku(dbOrTx: ReturnType<typeof getDb>, sku?: string | null): void {
+  if (!sku) return;
+  const clean = sku.trim();
+  if (!clean) return;
+  const existingVariant = dbOrTx.select().from(productVariants).where(eq(productVariants.sku, clean)).get();
+  if (existingVariant) {
+    const product = dbOrTx.select().from(products).where(eq(products.id, existingVariant.product_id)).get();
+    const isDeleted = !existingVariant.is_active || existingVariant.deleted_at !== null || (product && (!product.is_active || product.deleted_at !== null));
+    if (isDeleted) {
+      dbOrTx.update(productVariants)
+        .set({ sku: `${clean}_del_${String(existingVariant.id)}_${String(Date.now())}`, is_active: false })
+        .where(eq(productVariants.id, existingVariant.id))
+        .run();
+    }
+  }
+}
+
+/**
+ * Archive barcodes for a soft-deleted variant so the UNIQUE constraint is freed.
+ * Appends `_del_<variantId>` to each barcode value (keeps the row for historical display).
+ */
+function archiveVariantIdentifiers(db: ReturnType<typeof getDb>, variantId: number): void {
+  const suffix = `_del_${String(variantId)}`;
+  const barcodes = db.select().from(productBarcodes).where(eq(productBarcodes.variant_id, variantId)).all();
+  for (const bc of barcodes) {
+    if (!bc.barcode.endsWith(suffix)) {
+      db.update(productBarcodes)
+        .set({ barcode: bc.barcode + suffix, is_active: false })
+        .where(eq(productBarcodes.id, bc.id))
+        .run();
+    } else {
+      db.update(productBarcodes)
+        .set({ is_active: false })
+        .where(eq(productBarcodes.id, bc.id))
+        .run();
+    }
+  }
+  // Archive SKU if present so it can be reused
+  const variant = db.select().from(productVariants).where(eq(productVariants.id, variantId)).get();
+  if (variant?.sku && !variant.sku.endsWith(suffix)) {
+    db.update(productVariants)
+      .set({ sku: variant.sku + suffix })
+      .where(eq(productVariants.id, variantId))
+      .run();
+  }
+}
+
+/**
  * Delete a single variant. 
  * - If the variant has transaction history (sales, returns, purchases, stock movements),
- *   it is soft-deleted (deleted_at timestamp set, is_active = false, barcodes deactivated).
+ *   it is soft-deleted (deleted_at timestamp set, is_active = false, barcodes/SKU archived).
  *   All historical receipts/reports remain fully intact and readable.
+ *   Barcode and SKU values are suffixed so the UNIQUE constraint is freed for reuse.
  * - If no history exists, it is hard-deleted cleanly from the database.
  */
 export function deleteVariant(variantId: number): { deleted: 'soft' | 'hard' } {
@@ -316,7 +401,8 @@ export function deleteVariant(variantId: number): { deleted: 'soft' | 'hard' } {
   if (hasHistory) {
     // Soft-delete: preserve the row so past receipts/reports keep showing the name
     const now = new Date().toISOString();
-    db.update(productBarcodes).set({ is_active: false }).where(eq(productBarcodes.variant_id, variantId)).run();
+    // Archive barcodes and SKU so their UNIQUE values are freed for reuse
+    archiveVariantIdentifiers(db, variantId);
     db.update(productVariants).set({ is_active: false, deleted_at: now, updated_at: now }).where(eq(productVariants.id, variantId)).run();
     logAuditEvent({
       event_type: 'CATALOG_VARIANT_DELETE',
@@ -375,8 +461,9 @@ export function deleteProduct(productId: number): { deleted: 'soft' | 'hard' } {
 
   if (hasHistory) {
     // Soft-delete product and all its variants
+    // Archive barcodes and SKUs so their UNIQUE values are freed for reuse
     for (const v of variantIds) {
-      db.update(productBarcodes).set({ is_active: false }).where(eq(productBarcodes.variant_id, v.id)).run();
+      archiveVariantIdentifiers(db, v.id);
       db.update(productVariants)
         .set({ is_active: false, deleted_at: now, updated_at: now })
         .where(eq(productVariants.id, v.id))
