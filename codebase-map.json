@@ -1,0 +1,149 @@
+{
+  "project": "Zenthropic Technologies — Multi-System POS & Supply Chain Ecosystem",
+  "generated_at": "2026-11-16T14:24:37.352Z",
+  "architecture": {
+    "pattern": "Multi-Tenant Modular Monorepo with Offline-First Distributed Synchronization",
+    "tenancy": "Row Level Security (RLS) PostgreSQL + Local SQLite Cache per Counter",
+    "client_parity": "100% Feature Parity between Electron Desktop and Web via Universal Adapter"
+  },
+  "apps": [
+    {
+      "name": "MartPOS Desktop (Electron)",
+      "path": "src",
+      "type": "Desktop POS Client",
+      "file_count": 194
+    },
+    {
+      "name": "MartPOS Web (Cloud POS)",
+      "path": "packages/web",
+      "type": "Web PRD & UAT Client",
+      "file_count": 93
+    },
+    {
+      "name": "WarehouseOS Web",
+      "path": "packages/warehouse-web",
+      "type": "Supply Chain & Inventory Hub",
+      "file_count": 42
+    },
+    {
+      "name": "Zenthropic Corporate Site",
+      "path": "packages/company-site",
+      "type": "Public SaaS Landing",
+      "file_count": 2
+    }
+  ],
+  "database": {
+    "driver_desktop": "better-sqlite3 + Drizzle ORM (Local WAL Mode)",
+    "driver_cloud": "PostgreSQL + Supabase Cloud Engine",
+    "schemas": [
+      "audit",
+      "auth",
+      "barcode-jobs",
+      "cash",
+      "catalog",
+      "customers",
+      "expenses",
+      "index",
+      "inventory",
+      "purchases",
+      "returns",
+      "sales",
+      "settings"
+    ]
+  },
+  "ipc_channels": [
+    "app",
+    "audit",
+    "auth",
+    "backup",
+    "barcode-jobs",
+    "cash",
+    "catalog",
+    "customers",
+    "dashboard",
+    "expenses",
+    "hardware",
+    "inventory",
+    "licensing",
+    "notifications",
+    "purchases",
+    "reports",
+    "returns",
+    "sales",
+    "settings",
+    "suppliers",
+    "users"
+  ],
+  "stores": {
+    "desktop_count": 16,
+    "web_count": 16,
+    "shared_state": [
+      "auditStore",
+      "authStore",
+      "backupStore",
+      "barcodeStore",
+      "catalogStore",
+      "customersStore",
+      "inventoryStore",
+      "licensingStore",
+      "notificationsStore",
+      "posStore",
+      "purchasesStore",
+      "reportsStore",
+      "settingsStore",
+      "suppliersStore",
+      "themeStore",
+      "usersStore"
+    ]
+  },
+  "features": {
+    "martpos_desktop": [
+      "audit",
+      "auth",
+      "barcodes",
+      "catalog",
+      "customers",
+      "inventory",
+      "licensing",
+      "notifications",
+      "pos",
+      "products",
+      "purchases",
+      "reports",
+      "returns",
+      "settings",
+      "suppliers",
+      "users"
+    ],
+    "martpos_web": [
+      "audit",
+      "auth",
+      "barcodes",
+      "catalog",
+      "customers",
+      "inventory",
+      "landing",
+      "licensing",
+      "notifications",
+      "pos",
+      "products",
+      "purchases",
+      "reports",
+      "returns",
+      "settings",
+      "suppliers",
+      "users"
+    ],
+    "warehouse_web": [
+      "auth",
+      "bins",
+      "dashboard",
+      "inbound",
+      "landing",
+      "reports",
+      "settings",
+      "stock",
+      "transfers"
+    ]
+  }
+}

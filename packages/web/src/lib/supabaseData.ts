@@ -1,9 +1,10 @@
 /**
- * Supabase Data Layer — MartPOS Cloud
+ * Supabase Data Layer — MartPOS Cloud (Enterprise Hardened)
  *
- * Direct Supabase queries replacing REST API calls in apiClient.ts.
- * All functions use RLS — the authenticated user can only access
- * their own organization's data.
+ * Direct Supabase queries with strict Multi-Tenant Organization Isolation.
+ * Defense-in-depth:
+ * 1. Database-level RLS (Row Level Security) enforced via Supabase JWT
+ * 2. Application-level mandatory `org_id` filtering on EVERY query (Fail-Closed Default)
  *
  * Financial values are integer minor units (paisa) — never float.
  */
@@ -258,16 +259,20 @@ export async function getDashboardKpis(): Promise<DashboardKpis | null> {
   }
 }
 
-// ─── Products ───────────────────────────────────────────────────────────────
+// ─── Products (Strictly Tenant-Scoped) ──────────────────────────────────────
 
 export async function listProducts(): Promise<CloudProduct[]> {
   const sb = getSupabase();
   if (!sb) return [];
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return [];
+
     const { data, error } = await sb
       .from('cloud_products')
       .select('*')
+      .eq('org_id', orgId)
       .eq('is_active', true)
       .order('name', { ascending: true });
 
@@ -285,9 +290,12 @@ export async function createProduct(
   if (!sb) return null;
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return null;
+
     const { data, error } = await sb
       .from('cloud_products')
-      .insert(product)
+      .insert({ ...product, org_id: orgId })
       .select()
       .single();
 
@@ -306,10 +314,14 @@ export async function updateProduct(
   if (!sb) return false;
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return false;
+
     const { error } = await sb
       .from('cloud_products')
       .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('org_id', orgId);
 
     return !error;
   } catch {
@@ -322,10 +334,14 @@ export async function deleteProduct(id: string): Promise<boolean> {
   if (!sb) return false;
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return false;
+
     const { error } = await sb
       .from('cloud_products')
       .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('org_id', orgId);
 
     return !error;
   } catch {
@@ -341,9 +357,13 @@ export async function searchProducts(query: string): Promise<CloudProduct[]> {
   if (!trimmed) return [];
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return [];
+
     const { data, error } = await sb
       .from('cloud_products')
       .select('*')
+      .eq('org_id', orgId)
       .eq('is_active', true)
       .or(`name.ilike.%${trimmed}%,barcode.eq.${trimmed}`)
       .order('name', { ascending: true })
@@ -356,16 +376,20 @@ export async function searchProducts(query: string): Promise<CloudProduct[]> {
   }
 }
 
-// ─── Sales ──────────────────────────────────────────────────────────────────
+// ─── Sales (Strictly Tenant-Scoped) ─────────────────────────────────────────
 
 export async function listRecentSales(limit = 50): Promise<CloudSale[]> {
   const sb = getSupabase();
   if (!sb) return [];
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return [];
+
     const { data, error } = await sb
       .from('cloud_sales')
       .select('*')
+      .eq('org_id', orgId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -383,9 +407,12 @@ export async function createSale(
   if (!sb) return null;
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return null;
+
     const { data, error } = await sb
       .from('cloud_sales')
-      .insert(sale)
+      .insert({ ...sale, org_id: orgId })
       .select()
       .single();
 
@@ -423,16 +450,20 @@ export async function getTodaySalesTotal(): Promise<{ total_minor: number; count
   }
 }
 
-// ─── Inventory ──────────────────────────────────────────────────────────────
+// ─── Inventory (Strictly Tenant-Scoped) ─────────────────────────────────────
 
 export async function getLowStockProducts(threshold = 10): Promise<CloudProduct[]> {
   const sb = getSupabase();
   if (!sb) return [];
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return [];
+
     const { data, error } = await sb
       .from('cloud_products')
       .select('*')
+      .eq('org_id', orgId)
       .eq('is_active', true)
       .lt('stock_quantity', threshold)
       .order('stock_quantity', { ascending: true });
@@ -452,13 +483,17 @@ export async function updateStock(
   if (!sb) return false;
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return false;
+
     const { error } = await sb
       .from('cloud_products')
       .update({
         stock_quantity: newQuantity,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', productId);
+      .eq('id', productId)
+      .eq('org_id', orgId);
 
     return !error;
   } catch {
@@ -466,16 +501,20 @@ export async function updateStock(
   }
 }
 
-// ─── Customers ──────────────────────────────────────────────────────────────
+// ─── Customers (Strictly Tenant-Scoped) ─────────────────────────────────────
 
 export async function listCloudCustomers(): Promise<CloudCustomer[]> {
   const sb = getSupabase();
   if (!sb) return [];
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return [];
+
     const { data, error } = await sb
       .from('cloud_customers')
       .select('*')
+      .eq('org_id', orgId)
       .eq('is_active', true)
       .order('name', { ascending: true });
 
@@ -493,9 +532,12 @@ export async function createCloudCustomer(
   if (!sb) return null;
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return null;
+
     const { data, error } = await sb
       .from('cloud_customers')
-      .insert(customer)
+      .insert({ ...customer, org_id: orgId })
       .select()
       .single();
 
@@ -506,16 +548,20 @@ export async function createCloudCustomer(
   }
 }
 
-// ─── Suppliers ──────────────────────────────────────────────────────────────
+// ─── Suppliers (Strictly Tenant-Scoped) ─────────────────────────────────────
 
 export async function listCloudSuppliers(): Promise<CloudSupplier[]> {
   const sb = getSupabase();
   if (!sb) return [];
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return [];
+
     const { data, error } = await sb
       .from('cloud_suppliers')
       .select('*')
+      .eq('org_id', orgId)
       .eq('is_active', true)
       .order('name', { ascending: true });
 
@@ -533,9 +579,12 @@ export async function createCloudSupplier(
   if (!sb) return null;
 
   try {
+    const orgId = await getUserOrgId();
+    if (!orgId) return null;
+
     const { data, error } = await sb
       .from('cloud_suppliers')
-      .insert(supplier)
+      .insert({ ...supplier, org_id: orgId })
       .select()
       .single();
 
