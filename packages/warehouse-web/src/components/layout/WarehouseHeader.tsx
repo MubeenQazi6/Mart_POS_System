@@ -85,7 +85,7 @@ export function WarehouseHeader(): React.JSX.Element {
         {/* Right side: Live clock, DB health, notifications, user profile */}
         <div className="flex items-center gap-3">
           {/* Live digital clock */}
-          <div className="hidden sm:flex items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-1 text-xs font-mono text-cyan-400 border border-slate-800">
+          <div className="hidden sm:flex items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-1 text-xs font-mono text-amber-400 border border-slate-800">
             <Clock className="h-3.5 w-3.5 text-slate-400" />
             <span>{currentTime}</span>
           </div>
@@ -102,7 +102,7 @@ export function WarehouseHeader(): React.JSX.Element {
 
           {/* Logistics Bay Status */}
           <div className="hidden lg:flex items-center gap-1.5 rounded-lg bg-slate-950 px-2.5 py-1 text-[11px] font-semibold text-slate-300 border border-slate-800">
-            <Truck className="h-3.5 w-3.5 text-cyan-400" />
+            <Truck className="h-3.5 w-3.5 text-amber-400" />
             <span>Dock Bays 1-4 Ready</span>
           </div>
 
@@ -114,7 +114,7 @@ export function WarehouseHeader(): React.JSX.Element {
               aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-cyan-400" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400" />
             </button>
 
             {showNotifications && (
@@ -122,7 +122,7 @@ export function WarehouseHeader(): React.JSX.Element {
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-xs text-white uppercase tracking-wider">Logistics Alerts</span>
-                    <span className="px-1.5 py-0.2 bg-cyan-500/20 text-cyan-400 text-[10px] rounded font-bold">3 New</span>
+                    <span className="px-1.5 py-0.2 bg-amber-500/20 text-amber-400 text-[10px] rounded font-bold">3 New</span>
                   </div>
                   <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-white">
                     <X className="w-3.5 h-3.5" />
@@ -137,7 +137,7 @@ export function WarehouseHeader(): React.JSX.Element {
                         ) : n.type === 'success' ? (
                           <PackageCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                         ) : (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                         )}
                         <div>
                           <p className="text-slate-200 font-medium leading-snug">{n.title}</p>
@@ -154,13 +154,13 @@ export function WarehouseHeader(): React.JSX.Element {
           {/* User profile with role & logout */}
           <div className="flex items-center gap-3 pl-3 border-l border-slate-800">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center justify-center font-bold text-xs shadow-sm">
+              <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-xs shadow-sm">
                 {user?.fullName?.charAt(0) || 'W'}
               </div>
               <div className="text-left text-xs hidden sm:block">
                 <p className="font-bold text-slate-200 leading-tight">{user?.fullName || 'Logistics Officer'}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-400 font-mono">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400 font-mono">
                     {user?.role?.replace('_', ' ') || 'Supervisor'}
                   </span>
                   <span className="text-[9px] text-slate-500">· {user?.shift || 'Morning'}</span>

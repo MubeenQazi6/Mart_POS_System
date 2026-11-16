@@ -23,24 +23,24 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
   const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased selection:bg-cyan-500 selection:text-slate-950 relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950 relative overflow-x-hidden">
       {/* Background Glows */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 right-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[140px]" />
-        <div className="absolute bottom-10 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[140px]" />
+        <div className="absolute -top-40 right-1/4 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[140px]" />
+        <div className="absolute bottom-10 left-1/4 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[140px]" />
       </div>
 
       {/* Navigation Header */}
       <header className="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-slate-950 shadow-lg shadow-cyan-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-400 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/20">
               <Warehouse className="h-6 w-6 stroke-[2.2]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-lg tracking-tight text-white">WarehouseOS</span>
-                <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   Enterprise WMS
                 </span>
               </div>
@@ -53,7 +53,7 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
               variant="outline"
               size="sm"
               onClick={() => setShowDownloadModal(true)}
-              leftIcon={<Download className="h-4 w-4 text-cyan-400" />}
+              leftIcon={<Download className="h-4 w-4 text-amber-400" />}
               className="text-xs bg-slate-900 border-slate-800 hover:bg-slate-800 hidden sm:inline-flex"
             >
               Download Desktop (.exe)
@@ -63,7 +63,7 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
               size="sm"
               onClick={onProceedToLogin}
               rightIcon={<ArrowRight className="h-4 w-4" />}
-              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold border-0 shadow-lg shadow-cyan-500/20"
+              className="bg-brand-600 hover:bg-brand-500 text-white font-bold border-0 shadow-lg shadow-amber-500/20"
             >
               Sign In to Hub
             </Button>
@@ -75,15 +75,15 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
       <main className="flex-1 max-w-7xl mx-auto px-6 py-12 relative z-10 w-full space-y-16">
         <div className="text-center max-w-3xl mx-auto space-y-6 pt-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 shadow-md">
-            <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-            <span className="text-cyan-400">WarehouseOS Showcase</span>
+            <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+            <span className="text-amber-400">WarehouseOS Showcase</span>
             <span className="text-slate-600">•</span>
             <span>Central Logistics & Distribution Center Hub</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-tight">
             Distribution Logistics, Rack Telemetry & <br />
-            <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-400 via-amber-200 to-orange-500 bg-clip-text text-transparent">
               Branch Replenishment (STO)
             </span>
           </h1>
@@ -98,7 +98,7 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
               size="lg"
               onClick={onProceedToLogin}
               rightIcon={<ArrowRight className="h-5 w-5" />}
-              className="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-base px-8 shadow-xl shadow-cyan-500/20 hover:scale-[1.02] transition-transform border-0"
+              className="w-full sm:w-auto bg-brand-600 hover:bg-brand-500 text-white font-black text-base px-8 shadow-xl shadow-amber-500/20 hover:scale-[1.02] transition-transform border-0"
             >
               Launch Live Warehouse Hub
             </Button>
@@ -106,7 +106,7 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
               variant="outline"
               size="lg"
               onClick={() => setShowDownloadModal(true)}
-              leftIcon={<Monitor className="h-5 w-5 text-cyan-400" />}
+              leftIcon={<Monitor className="h-5 w-5 text-amber-400" />}
               className="w-full sm:w-auto bg-slate-900 border-slate-800 hover:bg-slate-800 text-white font-bold text-base px-6"
             >
               Download Desktop App (.exe)
@@ -123,45 +123,45 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* 1. Inbound GRN */}
-            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/40 transition-all duration-300 space-y-4 shadow-xl">
-              <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 transition-all duration-300 space-y-4 shadow-xl">
+              <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                 <FileInput className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-white">Inbound Freight & Put-Away</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Record Goods Received Notes (GRN), verify supplier Purchase Orders, execute Quality Control approvals, and auto-allocate storage bins.
               </p>
-              <div className="pt-2 border-t border-slate-800/80 text-xs text-cyan-400 font-mono flex items-center gap-1.5">
+              <div className="pt-2 border-t border-slate-800/80 text-xs text-amber-400 font-mono flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>Automated PO Matching</span>
               </div>
             </div>
 
             {/* 2. Bin Coordinates */}
-            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-blue-500/40 transition-all duration-300 space-y-4 shadow-xl">
-              <div className="h-12 w-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 transition-all duration-300 space-y-4 shadow-xl">
+              <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                 <Layers className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-white">3D Bin & Rack Telemetry</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Physical coordinate digital twin (Aisle, Rack, Shelf). Real-time pallet structural weight load meters and put-away optimization.
               </p>
-              <div className="pt-2 border-t border-slate-800/80 text-xs text-blue-400 font-mono flex items-center gap-1.5">
+              <div className="pt-2 border-t border-slate-800/80 text-xs text-amber-400 font-mono flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5" />
                 <span>Zone Load Thresholds</span>
               </div>
             </div>
 
             {/* 3. Outbound STO */}
-            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-violet-500/40 transition-all duration-300 space-y-4 shadow-xl">
-              <div className="h-12 w-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+            <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 transition-all duration-300 space-y-4 shadow-xl">
+              <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                 <Truck className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-white">Retail Store Replenishment</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Pick, pack and dispatch bulk stock to MartPOS branches. Generate driver manifests, track transit vehicles, and receive confirmation stamps.
               </p>
-              <div className="pt-2 border-t border-slate-800/80 text-xs text-violet-400 font-mono flex items-center gap-1.5">
+              <div className="pt-2 border-t border-slate-800/80 text-xs text-amber-400 font-mono flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 <span>Automated Gate-Pass Tracking</span>
               </div>
@@ -170,10 +170,10 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
         </div>
 
         {/* Desktop vs Web Dual Ecosystem */}
-        <div className="p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/30 border border-slate-800 space-y-6">
+        <div className="p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-amber-950/20 border border-slate-800 space-y-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 font-mono">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-400 font-mono">
                 Dedicated WMS Architecture
               </span>
               <h3 className="text-2xl font-black text-white mt-1">Multi-Tenant Cloud + Offline Desktop Hub</h3>
@@ -186,7 +186,7 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
                 variant="outline"
                 size="sm"
                 onClick={() => setShowDownloadModal(true)}
-                leftIcon={<Monitor className="h-4 w-4 text-cyan-400" />}
+                leftIcon={<Monitor className="h-4 w-4 text-amber-400" />}
                 className="bg-slate-950 border-slate-700 text-white"
               >
                 Get Desktop Edition
@@ -196,7 +196,7 @@ export function WarehouseProductShowcase({ onProceedToLogin }: WarehouseProductS
                 size="sm"
                 onClick={onProceedToLogin}
                 rightIcon={<ArrowRight className="h-4 w-4" />}
-                className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold border-0"
+                className="bg-brand-600 hover:bg-brand-500 text-white font-bold border-0"
               >
                 Sign In to Hub
               </Button>

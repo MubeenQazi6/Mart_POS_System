@@ -34,10 +34,10 @@ const NAV_SECTIONS: NavSection[] = [
     title: 'Operations',
     items: [
       { to: '/', label: 'Command Center', icon: LayoutDashboard },
-      { to: '/inbound', label: 'Inbound GRN Receipts', icon: FileInput, badge: 'Inward', badgeColor: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
+      { to: '/inbound', label: 'Inbound GRN Receipts', icon: FileInput, badge: 'Inward', badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
       { to: '/bins', label: 'Bin & Rack Matrix', icon: Grid3X3 },
       { to: '/stock', label: 'Master Inventory & Batches', icon: PackageSearch },
-      { to: '/transfers', label: 'Store Stock Transfers', icon: Truck, badge: 'Fleet', badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+      { to: '/transfers', label: 'Store Stock Transfers', icon: Truck, badge: 'Fleet', badgeColor: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
     ],
   },
   {
@@ -57,29 +57,29 @@ export function WarehouseSidebar(): React.JSX.Element {
   const utilizationPct = Math.round((occupiedBins / totalBins) * 100);
 
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0 select-none z-20">
+    <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col justify-between shrink-0 select-none z-20">
       {/* Brand Header */}
       <div>
-        <div className="h-14 flex items-center gap-3 px-5 border-b border-slate-800 bg-slate-900/90">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-slate-950 shadow-md shadow-cyan-500/20">
-            <Warehouse className="h-4.5 w-4.5 stroke-[2.2]" />
+        <div className="h-14 flex items-center gap-3 px-5 border-b border-slate-800 bg-slate-950">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-md">
+            <Warehouse className="h-5 w-5 stroke-[2.2]" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-sm tracking-tight text-white">WarehouseOS</span>
-              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <span className="font-black text-sm tracking-tight text-white uppercase">WarehouseOS</span>
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
                 PRO
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-mono">Central Hub · Lahore</p>
+            <p className="text-[10px] text-amber-400/90 font-mono">Central Hub · Lahore</p>
           </div>
         </div>
 
         {/* Nav Links Grouped by Section */}
-        <div className="p-3 space-y-5 sidebar-scroll max-h-[calc(100vh-210px)] overflow-y-auto">
+        <div className="p-3 space-y-5 sidebar-scroll max-h-[calc(100vh-220px)] overflow-y-auto">
           {NAV_SECTIONS.map((section) => (
             <div key={section.title} className="space-y-1">
-              <div className="px-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+              <div className="px-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 {section.title}
               </div>
               {section.items.map((item) => {
@@ -92,21 +92,21 @@ export function WarehouseSidebar(): React.JSX.Element {
                     className={({ isActive }) =>
                       `flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         isActive
-                          ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-slate-950 font-bold shadow-md shadow-cyan-500/20'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                          ? 'bg-brand-600 text-white shadow-xs font-bold'
+                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                       }`
                     }
                   >
                     {({ isActive }) => (
                       <>
                         <div className="flex items-center gap-2.5">
-                          <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
+                          <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                           <span>{item.label}</span>
                         </div>
                         {item.badge && (
                           <span
                             className={`text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
-                              isActive ? 'bg-slate-950 text-cyan-400 border-cyan-300' : item.badgeColor
+                              isActive ? 'bg-slate-950 text-amber-400 border-amber-400/40' : item.badgeColor
                             }`}
                           >
                             {item.badge}
@@ -122,44 +122,44 @@ export function WarehouseSidebar(): React.JSX.Element {
         </div>
       </div>
 
-      {/* Storage Capacity Gauge Card at Bottom */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/60">
+      {/* Footer Area with Desktop Download and Storage Capacity */}
+      <div className="p-3 border-t border-slate-800 bg-slate-950">
         {/* Download Desktop App Button */}
         <button
           type="button"
           onClick={() => setShowDownloadModal(true)}
-          className="w-full mb-3 flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 hover:border-cyan-400 text-cyan-400 hover:text-cyan-300 transition-all text-xs font-semibold group"
+          className="w-full mb-2.5 flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/30 hover:border-amber-400 text-amber-400 hover:text-amber-300 transition-all text-xs font-semibold group"
           title="Download Desktop App"
         >
-          <Monitor className="h-4 w-4 shrink-0 text-cyan-400 group-hover:scale-110 transition-transform" />
+          <Monitor className="h-4 w-4 shrink-0 text-amber-400 group-hover:scale-110 transition-transform" />
           <div className="text-left min-w-0 flex-1">
-            <span className="block font-bold text-white text-[11px] group-hover:text-cyan-400 transition-colors">
+            <span className="block font-bold text-white text-[11px] group-hover:text-amber-400 transition-colors">
               Download Desktop App
             </span>
             <span className="block text-[10px] text-slate-400 font-mono">100% Offline warehouse.db</span>
           </div>
         </button>
 
-        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="font-bold text-slate-300 flex items-center gap-1.5">
-              <Boxes className="w-3.5 h-3.5 text-cyan-400" />
+        <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className="font-bold text-slate-300 flex items-center gap-1.5 text-[11px]">
+              <Boxes className="w-3.5 h-3.5 text-amber-400" />
               Bin Utilization
             </span>
-            <span className="font-mono text-cyan-400 font-bold">{utilizationPct}%</span>
+            <span className="font-mono text-amber-400 font-bold text-[11px]">{utilizationPct}%</span>
           </div>
 
           {/* Progress bar */}
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                utilizationPct > 85 ? 'bg-rose-500' : utilizationPct > 70 ? 'bg-cyan-500' : 'bg-emerald-500'
+                utilizationPct > 85 ? 'bg-rose-500' : utilizationPct > 70 ? 'bg-brand-500' : 'bg-emerald-500'
               }`}
               style={{ width: `${utilizationPct}%` }}
             />
           </div>
 
-          <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1.5">
             <span>{occupiedBins} of {totalBins} Bins Occupied</span>
             <span className="text-emerald-400 font-medium">Optimal</span>
           </div>

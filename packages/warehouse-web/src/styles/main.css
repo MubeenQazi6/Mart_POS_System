@@ -3,36 +3,48 @@
 @tailwind utilities;
 
 /*
-  WarehouseOS — Cyber Cyan & Slate Logistics Design System
-  Mirroring the MartPOS enterprise finish with high-tech supply chain aesthetics
+  WarehouseOS — Enterprise Logistics Operating System
+  Matches MartPOS Navy chrome + Amazon Orange primary design system exactly
 */
 
 :root {
-  --color-primary: #06b6d4;
-  --color-primary-hover: #0891b2;
-  --color-primary-active: #0e7490;
-  --color-primary-soft: #ecfeff;
-  --color-primary-soft-text: #0e7490;
-  --color-primary-border: #a5f3fc;
-  --color-primary-ring: #06b6d4;
-  --color-primary-gradient: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%);
-  --color-primary-contrast: #083344;
+  --color-primary: #f0932a;
+  --color-primary-hover: #e07a10;
+  --color-primary-active: #c8690c;
+  --color-primary-soft: #fff7ec;
+  --color-primary-soft-text: #9a4e0a;
+  --color-primary-border: #fbd9a8;
+  --color-primary-ring: #f0932a;
+  --color-primary-gradient: linear-gradient(135deg, #f7a83e 0%, #d97e15 100%);
+  --color-primary-contrast: #131921;
 
-  --color-brand-50: #ecfeff;
-  --color-brand-100: #cffafe;
-  --color-brand-200: #a5f3fc;
-  --color-brand-300: #67e8f9;
-  --color-brand-400: #22d3ee;
-  --color-brand-500: #06b6d4;
-  --color-brand-600: #0891b2;
-  --color-brand-700: #0e7490;
-  --color-brand-800: #155e75;
-  --color-brand-900: #164e63;
-  --color-brand-950: #083344;
+  --color-brand-50: #fff7ec;
+  --color-brand-100: #ffecd2;
+  --color-brand-200: #fbd9a8;
+  --color-brand-300: #f7c179;
+  --color-brand-400: #f7a83e;
+  --color-brand-500: #f0932a;
+  --color-brand-600: #d97e15;
+  --color-brand-700: #b3660f;
+  --color-brand-800: #8a4f0c;
+  --color-brand-900: #6b3e0a;
+  --color-brand-950: #3a2005;
 
-  --surface-base: #0b1120;
-  --surface-card: #0f172a;
-  --surface-border: #1e293b;
+  --navy-50: #f2f4f6;
+  --navy-100: #e2e6ea;
+  --navy-200: #c3cad3;
+  --navy-300: #97a3b3;
+  --navy-400: #5f7085;
+  --navy-500: #3b4a5e;
+  --navy-600: #232f3e;
+  --navy-700: #1b2530;
+  --navy-800: #131921;
+  --navy-900: #0d1218;
+  --navy-950: #060809;
+
+  --surface-base: #0d1218;
+  --surface-card: #131921;
+  --surface-border: #1b2530;
 }
 
 @layer base {
@@ -59,7 +71,7 @@
   }
 }
 
-/* Sidebar scroll — thin cyan thumb */
+/* Sidebar scroll — thin amber thumb matching MartPOS */
 .sidebar-scroll {
   overflow-y: auto;
   scrollbar-width: thin;
@@ -108,13 +120,13 @@
     @apply border-slate-700 bg-slate-900 text-slate-100 placeholder-slate-500 selection:bg-brand-900 selection:text-slate-100 disabled:bg-slate-950 disabled:text-slate-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-lg transition-colors text-sm;
   }
 
-  /* Buttons */
+  /* Buttons matching MartPOS */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-md shadow-cyan-500/20 transition-all hover:bg-cyan-400 active:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 disabled:cursor-not-allowed disabled:opacity-50 select-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-brand-500 active:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50 select-none;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-sm font-semibold text-slate-200 shadow-sm transition-all hover:bg-slate-700 hover:text-white active:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 disabled:cursor-not-allowed disabled:opacity-50 select-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-sm font-semibold text-slate-200 shadow-sm transition-all hover:bg-slate-700 hover:text-white active:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50 select-none;
   }
 
   .btn-chrome {
@@ -127,12 +139,12 @@
   }
 
   .card-hover {
-    @apply hover:border-cyan-500/40 hover:shadow-cyan-500/5 hover:shadow-xl;
+    @apply hover:border-brand-500/40 hover:shadow-xl;
   }
 
-  /* Badges */
+  /* Badges matching MartPOS */
   .badge-brand {
-    @apply bg-cyan-950/60 text-cyan-300 border border-cyan-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold inline-flex items-center gap-1;
+    @apply bg-amber-950/60 text-amber-300 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold inline-flex items-center gap-1;
   }
 
   .badge-emerald {
@@ -147,7 +159,7 @@
     @apply bg-rose-950/60 text-rose-300 border border-rose-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold inline-flex items-center gap-1;
   }
 
-  /* Tables */
+  /* Tables matching MartPOS */
   .data-table-header {
     @apply bg-slate-900/80 text-left text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 px-4 py-3;
   }
@@ -166,16 +178,16 @@
   }
 
   .tab-active {
-    @apply bg-slate-800/80 text-cyan-400 border-b-2 border-cyan-500;
+    @apply bg-slate-800/80 text-amber-400 border-b-2 border-amber-500;
   }
 
-  /* Sidebar Links */
+  /* Sidebar Links matching MartPOS */
   .sidebar-link {
     @apply flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-300 transition-all hover:bg-slate-800/80 hover:text-white;
   }
 
   .sidebar-link-active {
-    @apply bg-gradient-to-r from-cyan-500 to-cyan-600 text-slate-950 font-bold shadow-lg shadow-cyan-500/25 hover:from-cyan-400 hover:to-cyan-500 hover:text-slate-950;
+    @apply bg-brand-600 text-white font-bold shadow-md hover:bg-brand-500 hover:text-white;
   }
 
   /* Modals */
