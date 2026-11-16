@@ -147,30 +147,80 @@ export function PosPage(): React.JSX.Element {
   }, [loadHeldBills]);
 
   // Global Keyboard Shortcuts
+  // Hardware barcode scanner stream detection buffer
+  const scannerBufferRef = useRef<string>('');
+  const lastKeyTimestampRef = useRef<number>(0);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
-      // If Enter is pressed and the scan input is NOT currently focused,
-      // redirect focus to scan input to prevent the Enter key (from barcode scanner)
-      // from accidentally triggering whichever button/element has focus (e.g. cart minus button).
+      const now = Date.now();
+      const activeEl = document.activeElement;
+      const isInputFocused = activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement;
+
+      // ── Hardware Barcode Scanner Fast Stream Interception ──
+      // Barcode scanners type characters with < 50ms interval and end with Enter
+      if (!isPaymentModalOpen && !isReceiptModalOpen) {
+        if (e.key === 'Enter') {
+          const buffer = scannerBufferRef.current.trim();
+          if (buffer.length >= 3 && now - lastKeyTimestampRef.current < 200) {
+            e.preventDefault();
+            e.stopPropagation();
+            void lookupAndAddBarcode(buffer);
+            scannerBufferRef.current = '';
+            setScanQuery('');
+            return;
+          }
+          scannerBufferRef.current = '';
+        } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          if (now - lastKeyTimestampRef.current < 50 || scannerBufferRef.current === '') {
+            scannerBufferRef.current += e.key;
+          } else {
+            scannerBufferRef.current = e.key;
+          }
+          lastKeyTimestampRef.current = now;
+        }
+      }
+
+      // If Enter is pressed and the scan input is NOT currently focused and not in modal,
+      // redirect focus to scan input to prevent the Enter key from triggering random buttons.
       if (e.key === 'Enter' && !isPaymentModalOpen && !isReceiptModalOpen && !isManualAddModalOpen && !isHistoryModalOpen) {
-        const active = document.activeElement;
-        if (active !== scanInputRef.current) {
+        if (activeEl !== scanInputRef.current && !isInputFocused) {
           e.preventDefault();
           scanInputRef.current?.focus();
           return;
         }
       }
+
       // F2: Focus scanner
       if (e.key === 'F2') {
         e.preventDefault();
         scanInputRef.current?.focus();
         scanInputRef.current?.select();
+        return;
       }
-      // F4: Open held bills
-      if (e.key === 'F4') {
+
+      // F4 or F12: Open Payment / Checkout
+      if ((e.key === 'F4' || e.key === 'F12') && items.length > 0 && !isPaymentModalOpen && !isReceiptModalOpen && !isManualAddModalOpen && !isHistoryModalOpen) {
+        e.preventDefault();
+        openPaymentModal();
+        return;
+      }
+
+      // F8: Hold Current Bill
+      if (e.key === 'F8' && items.length > 0 && !isPaymentModalOpen) {
+        e.preventDefault();
+        void holdCurrentBill();
+        showToast('info', 'Current bill placed on hold');
+        return;
+      }
+
+      // F9: Open Held Bills modal
+      if (e.key === 'F9' && !isPaymentModalOpen) {
         e.preventDefault();
         openHeldBillsModal();
+        return;
       }
+
       // F6: Toggle discount
       if (e.key === 'F6' && items.length > 0) {
         e.preventDefault();
@@ -178,26 +228,9 @@ export function PosPage(): React.JSX.Element {
         if (!showDiscountInput) {
           setDiscountValue('');
         }
+        return;
       }
-      // F8: Clear cart
-      if (e.key === 'F8' && items.length > 0 && !isPaymentModalOpen) {
-        e.preventDefault();
-        if (window.confirm('Are you sure you want to clear the active cart?')) {
-          clearCart();
-        }
-      }
-      // F12: Checkout
-      if (
-        e.key === 'F12' &&
-        items.length > 0 &&
-        !isPaymentModalOpen &&
-        !isReceiptModalOpen &&
-        !isManualAddModalOpen &&
-        !isHistoryModalOpen
-      ) {
-        e.preventDefault();
-        openPaymentModal();
-      }
+
       // Escape: Close discount input or modals
       if (e.key === 'Escape') {
         if (showDiscountInput) {
@@ -206,19 +239,24 @@ export function PosPage(): React.JSX.Element {
         }
         if (isManualAddModalOpen) setIsManualAddModalOpen(false);
         if (isHistoryModalOpen) setIsHistoryModalOpen(false);
+        if (isHeldBillsModalOpen) closeHeldBillsModal();
+        if (isPaymentModalOpen) closePaymentModal();
+        return;
       }
-      // Ctrl+P: Reprint last completed sale if receipt preview is not currently open
+
+      // Ctrl+P: Reprint last completed sale
       if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
         if (!isReceiptModalOpen && completedSale) {
           e.preventDefault();
           setReprintSale(completedSale);
+          return;
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [
     items.length,
@@ -226,10 +264,15 @@ export function PosPage(): React.JSX.Element {
     isReceiptModalOpen,
     isManualAddModalOpen,
     isHistoryModalOpen,
+    isHeldBillsModalOpen,
     completedSale,
     clearCart,
     openPaymentModal,
+    closePaymentModal,
     openHeldBillsModal,
+    closeHeldBillsModal,
+    holdCurrentBill,
+    lookupAndAddBarcode,
     showDiscountInput,
   ]);
 
@@ -550,18 +593,22 @@ export function PosPage(): React.JSX.Element {
                 F2
               </kbd>{' '}
               Scan &bull;{' '}
-              <kbd className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono dark:bg-slate-800">
+              <kbd className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono dark:bg-slate-800 text-amber-500 font-bold">
                 F4
               </kbd>{' '}
-              Holds &bull;{' '}
+              Pay &bull;{' '}
+              <kbd className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono dark:bg-slate-800">
+                F8
+              </kbd>{' '}
+              Hold &bull;{' '}
+              <kbd className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono dark:bg-slate-800">
+                F9
+              </kbd>{' '}
+              Held Bills &bull;{' '}
               <kbd className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono dark:bg-slate-800">
                 F6
               </kbd>{' '}
-              Discount &bull;{' '}
-              <kbd className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono dark:bg-slate-800">
-                F12
-              </kbd>{' '}
-              Pay
+              Discount
             </p>
           </div>
         </div>

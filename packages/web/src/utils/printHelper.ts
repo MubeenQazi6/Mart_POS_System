@@ -133,22 +133,53 @@ export async function printReceiptElement(
 `;
 
   try {
-    if (window.martpos?.hardware?.printSilent) {
-      const res = await window.martpos.hardware.printSilent({
-        html: standaloneHtml,
-        printerType: options?.printerType || 'receipt',
-        printerName: options?.printerName,
-      });
+    if (window.martpos?.hardware?.printSilent && window.martpos.app) {
+      // Check if Electron native desktop environment
+      const appInfo = await window.martpos.app.getInfo().catch(() => null);
+      if (appInfo && appInfo.userDataPath && !appInfo.userDataPath.startsWith('cloud://') && !appInfo.userDataPath.startsWith('localStorage://')) {
+        const res = await window.martpos.hardware.printSilent({
+          html: standaloneHtml,
+          printerType: options?.printerType || 'receipt',
+          printerName: options?.printerName,
+        });
 
-      if (!res.success) {
-        showToast('error', res.error || 'Failed to print receipt directly');
-        return false;
+        if (!res.success) {
+          showToast('error', res.error || 'Failed to print receipt directly');
+          return false;
+        }
+        return true;
       }
-      return true;
-    } else {
-      window.print();
+    }
+
+    // Web Browser Environment: Render in hidden iframe for perfect 80mm thermal output
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(standaloneHtml);
+      doc.close();
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        try {
+          document.body.removeChild(iframe);
+        } catch {
+          // ignore cleanup errors
+        }
+      }, 1500);
       return true;
     }
+
+    window.print();
+    return true;
   } catch (err) {
     showToast('error', err instanceof Error ? err.message : 'Printing failed');
     return false;
