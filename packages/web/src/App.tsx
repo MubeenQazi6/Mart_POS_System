@@ -18,7 +18,30 @@ import { APP_NAME } from '@shared/constants/app';
 export default function App(): React.JSX.Element {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLogin] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const h = window.location.hash.toLowerCase();
+      const s = window.location.search.toLowerCase();
+      return h.includes('login') || h.includes('register') || s.includes('login') || s.includes('register');
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleLocation = () => {
+      const h = window.location.hash.toLowerCase();
+      const s = window.location.search.toLowerCase();
+      if (h.includes('login') || h.includes('register') || s.includes('login') || s.includes('register')) {
+        setShowLogin(true);
+      }
+    };
+    window.addEventListener('hashchange', handleLocation);
+    window.addEventListener('popstate', handleLocation);
+    return () => {
+      window.removeEventListener('hashchange', handleLocation);
+      window.removeEventListener('popstate', handleLocation);
+    };
+  }, []);
   const { isAuthenticated, isInitializing, initAuth } = useAuthStore();
   const { loadSettings } = useSettingsStore();
   const { initTheme } = useThemeStore();
@@ -114,7 +137,12 @@ export default function App(): React.JSX.Element {
         <ToastProvider>
           {!isAuthenticated ? (
             showLogin ? (
-              <LoginPage onBack={() => setShowLogin(false)} />
+              <LoginPage onBack={() => {
+                setShowLogin(false);
+                if (window.location.hash) {
+                  window.history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
+              }} />
             ) : (
               <MartPosProductShowcase onProceedToLogin={() => setShowLogin(true)} />
             )

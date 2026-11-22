@@ -137,7 +137,7 @@ export function LoginPage({ onBack }: LoginPageProps = {}): React.JSX.Element {
                 padding: '0.2rem 0',
               }}
             >
-              ← Back to Product Overview
+              ← Back to MartPOS Overview
             </button>
           </div>
         )}
@@ -714,6 +714,9 @@ export function LoginPage({ onBack }: LoginPageProps = {}): React.JSX.Element {
         >
           <ShieldCheck size={14} />
           <span>Encrypted Session • Cloud & Offline Sync Ready</span>
+        </div>
+        <div style={{ color: '#8b9bb4', fontSize: '0.75rem', marginTop: '0.75rem', textAlign: 'center' }}>
+          Powered by <strong style={{ color: '#f7a83e' }}>Zenthropic Technologies</strong>
         </div>
       </div>
     </div>

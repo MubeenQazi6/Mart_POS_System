@@ -44,7 +44,7 @@ export function MartPosProductShowcase({ onProceedToLogin }: MartPosProductShowc
                   Enterprise
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">By Zenthropic Technologies</p>
+              <p className="text-[11px] text-slate-400 font-medium">Powered by Zenthropic Technologies</p>
             </div>
           </div>
 
@@ -100,7 +100,7 @@ export function MartPosProductShowcase({ onProceedToLogin }: MartPosProductShowc
               rightIcon={<ArrowRight className="h-5 w-5" />}
               className="w-full sm:w-auto bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 font-black text-base px-8 shadow-xl shadow-amber-500/20 hover:scale-[1.02] transition-transform"
             >
-              Launch Live Web Portal
+              Start 3-Day Free Trial
             </Button>
             <Button
               variant="outline"
@@ -206,8 +206,13 @@ export function MartPosProductShowcase({ onProceedToLogin }: MartPosProductShowc
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 py-8 px-6 text-center text-xs text-slate-500 relative z-10">
-        <p>© 2026 Zenthropic Technologies (Pvt) Ltd. All Rights Reserved. MartPOS Enterprise Suite.</p>
+      <footer className="border-t border-slate-800/80 py-8 px-6 text-center text-xs relative z-10 flex flex-col items-center gap-2">
+        <p className="font-semibold text-slate-300 tracking-wide">
+          Powered by <span className="text-amber-400">Zenthropic Technologies</span>
+        </p>
+        <p className="text-slate-500">
+          © 2026 Zenthropic Technologies (Pvt) Ltd. All Rights Reserved. MartPOS Enterprise.
+        </p>
       </footer>
 
       {/* Download Modal */}
