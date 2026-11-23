@@ -41,7 +41,10 @@
     "build:warehouse:uat": "npm --prefix packages/warehouse-web run build:uat",
     "build:warehouse:prd": "npm --prefix packages/warehouse-web run build:prd",
     "build:all:uat": "npm run build:web:uat && npm run build:warehouse:uat",
-    "build:all:prd": "npm run build:web:prd && npm run build:warehouse:prd"
+    "build:all:prd": "npm run build:web:prd && npm run build:warehouse:prd",
+    "build:server": "npm --prefix packages/server run build",
+    "start:server": "npm --prefix packages/server start",
+    "dev:server": "npm --prefix packages/server run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
